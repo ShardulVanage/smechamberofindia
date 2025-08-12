@@ -1,5 +1,5 @@
 
-import About from "@/components/About";
+import About from "@/components/AboutSection";
 import { Division } from "@/components/Division";
 import { EventSponsors } from "@/components/event-sponsors";
 import Footer from "@/components/Footer";
