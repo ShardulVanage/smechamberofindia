@@ -6,6 +6,7 @@ const nextConfig = { images: {
         'plus.unsplash.com',
         'icasem-robotechsummit.pockethost.io',
         'zep-research.pockethost.io',
+        'lh3.googleusercontent.com',
       ],
     },};
 
