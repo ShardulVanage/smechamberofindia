@@ -88,15 +88,15 @@ export default function ServicesSection() {
                   >
                     <Icon
                       className={`
-                        w-8 h-8 text-gray-700 transition-all duration-300
-                        ${hoveredIndex === index ? "scale-110 text-gray-900" : ""}
+                        w-8 h-8 text-[#29688A] transition-all duration-300
+                        ${hoveredIndex === index ? "scale-110  text-[#29688A] " : "text-gray-900"}
                       `}
                     />
                   </div>
 
                   <div
                     className={`
-                      absolute inset-0 rounded-full border-2 border-gray-400/60
+                      absolute inset-0 rounded-full border-2 border-[#29688A]
                       transition-all duration-500 ease-out
                       ${hoveredIndex === index ? "scale-125 opacity-100" : "scale-100 opacity-0"}
                     `}
@@ -126,7 +126,7 @@ export default function ServicesSection() {
 
                 <div
                   className={`
-                    mt-3 h-0.5 bg-gradient-to-r from-gray-600 to-gray-800 rounded-full
+                    mt-3 h-0.5 bg-gradient-to-r from-gray-600 to-[#29688A] rounded-full
                     transition-all duration-500 ease-out
                     ${hoveredIndex === index ? "w-12 opacity-100" : "w-0 opacity-0"}
                   `}

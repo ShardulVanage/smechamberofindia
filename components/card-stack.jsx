@@ -2,7 +2,7 @@
 
 /**
  * @author: @dorian_baffier
- * @description: Card Stack
+ * @description: Card Stack - Always Expanded
  * @version: 1.0.0
  * @date: 2025-06-26
  * @license: MIT
@@ -10,17 +10,16 @@
  * @github: https://github.com/kokonut-labs/kokonutui
  */
 
-import { useState } from "react"
 import { motion } from "motion/react"
 import { cn } from "@/lib/utils"
-
 
 const products = [
   {
     id: "business-registration",
     title: "Business Registration",
     subtitle: "Company Setup",
-    image: "https://plus.unsplash.com/premium_photo-1661497281000-b5ecb39a2114?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    image:
+      "https://plus.unsplash.com/premium_photo-1661497281000-b5ecb39a2114?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     specs: [
       { label: "Process", value: "Simplified" },
       { label: "Time", value: "7-15 days" },
@@ -32,7 +31,8 @@ const products = [
     id: "export-assistance",
     title: "Export Assistance",
     subtitle: "Global Markets",
-    image: "https://images.unsplash.com/photo-1449586919022-f3dfddc48a71?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    image:
+      "https://images.unsplash.com/photo-1449586919022-f3dfddc48a71?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     specs: [
       { label: "Markets", value: "180+" },
       { label: "Guidance", value: "Complete" },
@@ -44,7 +44,8 @@ const products = [
     id: "networking",
     title: "Networking",
     subtitle: "Business Connections",
-    image: "https://plus.unsplash.com/premium_photo-1665203422028-68d636f2c944?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    image:
+      "https://plus.unsplash.com/premium_photo-1665203422028-68d636f2c944?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     specs: [
       { label: "Members", value: "50,000+" },
       { label: "Events", value: "Monthly" },
@@ -56,7 +57,8 @@ const products = [
     id: "training",
     title: "Training & Development",
     subtitle: "Skill Enhancement",
-    image: "https://images.unsplash.com/photo-1568992688065-536aad8a12f6?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    image:
+      "https://images.unsplash.com/photo-1568992688065-536aad8a12f6?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     specs: [
       { label: "Programs", value: "100+" },
       { label: "Experts", value: "Industry" },
@@ -66,42 +68,32 @@ const products = [
   },
 ]
 
-
-const Card = ({ product, index, totalCards, isExpanded }) => {
-  // Calculate center offset based on total cards
-  const centerOffset = (totalCards - 1) * 5
-
-  // Initial stacked position - centered with slight overlap
-  const defaultX = index * 10 - centerOffset
-  const defaultY = index * 2
-  const defaultRotate = index * 1.5
-  const defaultScale = 1
-
+const Card = ({ product, index, totalCards }) => {
   // Calculate the total width of expanded cards and center offset
   const cardWidth = 540 // Width of each card
   const cardOverlap = 240 // Amount of overlap between cards
   const totalExpandedWidth = cardWidth + (totalCards - 1) * (cardWidth - cardOverlap) // Total width including overlap
   const expandedCenterOffset = totalExpandedWidth / 2
 
-  // Fanned out position - centered spread with overlap
+  // Always use expanded position - centered spread with overlap
   const spreadX = index * (cardWidth - cardOverlap) - expandedCenterOffset + cardWidth / 2
   const spreadY = 0
-  const spreadRotate = index * 5 - (totalCards - 1) * 2.5 // Increased rotation for better visual effect
+  const spreadRotate = index * 5 - (totalCards - 1) * 2.5 // Rotation for visual effect
   const spreadScale = 1
 
   return (
     <motion.div
       initial={{
-        x: defaultX,
-        y: defaultY,
-        rotate: defaultRotate,
-        scale: defaultScale,
+        x: spreadX,
+        y: spreadY,
+        rotate: spreadRotate,
+        scale: spreadScale,
       }}
       animate={{
-        x: isExpanded ? spreadX : defaultX,
-        y: isExpanded ? spreadY : defaultY,
-        rotate: isExpanded ? spreadRotate : defaultRotate,
-        scale: isExpanded ? spreadScale : defaultScale,
+        x: spreadX,
+        y: spreadY,
+        rotate: spreadRotate,
+        scale: spreadScale,
         zIndex: totalCards - index,
       }}
       transition={{
@@ -140,14 +132,6 @@ const Card = ({ product, index, totalCards, isExpanded }) => {
         perspective: "2000px",
         left: "50%",
         marginLeft: "-160px",
-        transform: isExpanded
-          ? ""
-          : `
-                        translateY(${index * 10}px)
-                        translateX(${index * 1}px)
-                        rotate(${index * 3}deg)
-                        scale(${1 - index * 0.02})
-                    `,
         zIndex: products.length - index,
       }}
     >
@@ -155,7 +139,7 @@ const Card = ({ product, index, totalCards, isExpanded }) => {
       <div className="absolute inset-1 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm border border-neutral-200/50 dark:border-neutral-700/50" />
 
       <div className="relative z-10">
-        {/* Specs Grid moved to top */}
+        {/* Specs Grid */}
         <dl className="mb-4 grid grid-cols-4 gap-2 justify-center">
           {product.specs.map((spec) => (
             <div key={spec.label} className="text-[10px] backdrop-blur-sm flex flex-col items-start text-left">
@@ -192,37 +176,27 @@ const Card = ({ product, index, totalCards, isExpanded }) => {
               {product.subtitle}
             </span>
           </div>
-          
         </div>
       </div>
     </motion.div>
   )
 }
 
-
 export function CardStack({ className }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-
-  const handleToggle = () => setIsExpanded(!isExpanded)
-
   return (
-    <button
+    <div
       className={cn(
-        "relative mx-auto cursor-pointer",
+        "relative mx-auto",
         "min-h-[440px] w-full max-w-[90vw]",
         "md:max-w-[1200px]",
-        "appearance-none bg-transparent border-0 p-0",
         "flex items-center justify-center mb-8",
         className,
       )}
-      onClick={handleToggle}
-      aria-label="Toggle card stack"
-      type="button"
     >
       {products.map((product, index) => (
-        <Card key={product.id} product={product} index={index} totalCards={products.length} isExpanded={isExpanded} />
+        <Card key={product.id} product={product} index={index} totalCards={products.length} />
       ))}
-    </button>
+    </div>
   )
 }
 
