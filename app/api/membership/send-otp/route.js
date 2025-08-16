@@ -1,24 +1,41 @@
 import {  NextResponse } from "next/server"
 import nodemailer from "nodemailer"
 
-if (!(global).otpStorage) {
-  ;(global).otpStorage = new Map()
+if (!(global ).otpStorage) {
+  ;(global ).otpStorage = new Map()
 }
-if (!(global).rateLimitStorage) {
-  ;(global).rateLimitStorage = new Map()
+if (!(global ).rateLimitStorage) {
+  ;(global ).rateLimitStorage = new Map()
+}
+if (!(global ).ipRateLimitStorage) {
+  ;(global ).ipRateLimitStorage = new Map()
 }
 
 const otpStorage = (global ).otpStorage
 const rateLimitStorage = (global ).rateLimitStorage
+const ipRateLimitStorage = (global ).ipRateLimitStorage
 
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
 const MAX_ATTEMPTS = 3
+const IP_MAX_ATTEMPTS = 5 // Max attempts per IP regardless of email
+
+function normalizeEmail(email) {
+  return email.toLowerCase().trim()
+}
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
-async function verifyRecaptcha(token){
+function getClientIP(request) {
+  const forwarded = request.headers.get("x-forwarded-for")
+  const realIP = request.headers.get("x-real-ip")
+  const cfConnectingIP = request.headers.get("cf-connecting-ip")
+
+  return cfConnectingIP || realIP || forwarded?.split(",")[0] || request.ip || "unknown"
+}
+
+async function verifyRecaptcha(token) {
   if (!token) return false
 
   try {
@@ -42,12 +59,44 @@ export async function POST(request) {
   try {
     console.log(" Send OTP request received")
     const { email, mobile, recaptchaToken, isResend } = await request.json()
-    console.log(" Email:", email, "IsResend:", isResend)
 
-    const clientIP = request.ip || request.headers.get("x-forwarded-for") || "unknown"
-    const rateLimitKey = `${clientIP}-${email}`
+    const normalizedEmail = normalizeEmail(email)
+    console.log(" Original email:", email, "Normalized:", normalizedEmail, "IsResend:", isResend)
+
+    const clientIP = getClientIP(request)
     const now = Date.now()
 
+    const ipRateLimitData = ipRateLimitStorage.get(clientIP)
+    if (ipRateLimitData) {
+      const { attempts, firstAttempt, bannedUntil } = ipRateLimitData
+
+      // Check if IP is currently banned
+      if (bannedUntil && now < bannedUntil) {
+        const remainingTime = Math.ceil((bannedUntil - now) / 60000)
+        return NextResponse.json(
+          { error: `IP temporarily banned. Try again in ${remainingTime} minutes.` },
+          { status: 429 },
+        )
+      }
+
+      // Reset if window expired
+      if (now - firstAttempt > RATE_LIMIT_WINDOW) {
+        ipRateLimitStorage.set(clientIP, { attempts: 1, firstAttempt: now, bannedUntil: null })
+      } else {
+        const newAttempts = attempts + 1
+        if (newAttempts >= IP_MAX_ATTEMPTS) {
+          // Ban IP for 15 minutes
+          const bannedUntil = now + RATE_LIMIT_WINDOW
+          ipRateLimitStorage.set(clientIP, { attempts: newAttempts, firstAttempt, bannedUntil })
+          return NextResponse.json({ error: "Too many requests from this IP. Banned for 15 minutes." }, { status: 429 })
+        }
+        ipRateLimitStorage.set(clientIP, { attempts: newAttempts, firstAttempt, bannedUntil: null })
+      }
+    } else {
+      ipRateLimitStorage.set(clientIP, { attempts: 1, firstAttempt: now, bannedUntil: null })
+    }
+
+    const rateLimitKey = `${clientIP}-${normalizedEmail}`
     const rateLimitData = rateLimitStorage.get(rateLimitKey)
     if (rateLimitData) {
       const { attempts, firstAttempt } = rateLimitData
@@ -55,7 +104,7 @@ export async function POST(request) {
       if (now - firstAttempt < RATE_LIMIT_WINDOW) {
         if (attempts >= MAX_ATTEMPTS) {
           return NextResponse.json(
-            { error: "Too many OTP requests. Please try again after 15 minutes." },
+            { error: "Too many OTP requests for this email. Please try again after 15 minutes." },
             { status: 429 },
           )
         }
@@ -77,15 +126,15 @@ export async function POST(request) {
     const otp = generateOTP()
     const otpData = {
       otp,
-      email,
+      email: normalizedEmail, // Store normalized email
       mobile,
+      clientIP, // Store client IP for additional validation
       createdAt: now,
       expiresAt: now + 3 * 60 * 1000, // 3 minutes
     }
 
-    // Store OTP (this invalidates any previous OTP for this email)
-    otpStorage.set(email, otpData)
-    console.log(" OTP stored for email:", email, "OTP:", otp, "Expires at:", new Date(otpData.expiresAt))
+    otpStorage.set(normalizedEmail, otpData)
+    console.log(" OTP stored for normalized email:", normalizedEmail, "OTP:", otp, "IP:", clientIP)
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -116,21 +165,21 @@ export async function POST(request) {
 
     const emailPromise = transporter.sendMail({
       from: process.env.GMAIL_USER,
-      to: email,
+      to: normalizedEmail,
       subject: "Membership Application - OTP Verification",
       html: otpEmailHtml,
     })
 
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Email sending timeout")), 10000) // 10 second timeout
+      setTimeout(() => reject(new Error("Email sending timeout")), 10000)
     })
 
     await Promise.race([emailPromise, timeoutPromise])
-    console.log(" OTP email sent successfully to:", email)
+    console.log(" OTP email sent successfully to:", normalizedEmail)
 
     return NextResponse.json({
       message: "OTP sent successfully",
-      expiresIn: 180, // 3 minutes in seconds
+      expiresIn: 180,
     })
   } catch (error) {
     console.error(" Error sending OTP:", error)
