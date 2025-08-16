@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Example() {
   return (
     <>
@@ -19,12 +21,12 @@ export default function Example() {
             Sorry, we couldn’t find the page you’re looking for.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <a
+            <Link
               href="/"
               className="rounded-md bg-[#29688A] px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
             >
               Go back home
-            </a>
+            </Link>
             {/* <a href="#" className="text-sm font-semibold  border-2 text-black p-3 rounded-4xl" >
               Contact support <span aria-hidden="true">&rarr;</span>
             </a> */}
