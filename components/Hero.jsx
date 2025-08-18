@@ -1,99 +1,85 @@
-import { Mail, SendHorizonal } from "lucide-react"
+import { ArrowRight, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { AnimatedGroup } from "@/components/motion-primitives/animated-group"
-
 import { CardStack } from "./card-stack"
-
-const transitionVariants = {
-  item: {
-    hidden: {
-      opacity: 0,
-      filter: "blur(12px)",
-      y: 12,
-    },
-    visible: {
-      opacity: 1,
-      filter: "blur(0px)",
-      y: 0,
-      transition: {
-        type: "spring",
-        bounce: 0.3,
-        duration: 1.5,
-      },
-    },
-  },
-}
+import Link from "next/link"
 
 export default function HeroSection() {
   return (
-    <>
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <section className="relative">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Hero Content */}
+          <div className="pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-24 lg:pb-24">
+            <div className="text-center">
+              {/* Badge */}
+              <div className="inline-flex items-center rounded-full bg-[#29688A]/10 px-4 py-2 text-sm font-medium text-[#29688A] ring-1 ring-[#29688A]/20 mb-8">
+                <span>32 Years of Excellence</span>
+              </div>
 
-      <main className="overflow-hidden [--color-primary-foreground:var(--color-white)] [--color-primary:var(--color-green-600)]">
-        <section>
-          <div className="relative mx-auto max-w-6xl px-6 pb-2 pt-32 lg:pt-24">
-            <div className="relative z-10 mx-auto max-w-4xl text-center">
-              <h1
-               
-                className="text-balance text-5xl font-medium md:text-6xl"
-              >
-                Empowering SMEs for Global Success
+              {/* Main Heading */}
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl lg:text-7xl">
+                <span className="block">Empowering SMEs for</span>
+                <span className="block text-[#29688A]">Global Success</span>
               </h1>
-              <p
-                
-                className="mx-auto mt-6 max-w-2xl text-pretty text-lg"
-              >
-                For 32 years, SME Chamber of India has been the leading organization empowering small and medium
-                enterprises through business growth, export promotion, technology transfers, and global market
-                opportunities.
+
+              {/* Description */}
+              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-gray-600 sm:text-xl">
+                Leading organization empowering small and medium enterprises through business growth, export promotion,
+                technology transfers, and global market opportunities.
               </p>
 
-              <AnimatedGroup
-                variants={{
-                  container: {
-                    visible: {
-                      transition: {
-                        staggerChildren: 0.05,
-                        delayChildren: 0.75,
-                      },
-                    },
-                  },
-                  ...transitionVariants,
-                }}
-                className="mt-12"
-              >
-                <form action="" className="mx-auto max-w-sm">
-                  <div className="bg-background has-[input:focus]:ring-muted relative grid grid-cols-[1fr_auto] items-center rounded-[calc(var(--radius)+0.5rem)] border pr-2 shadow shadow-zinc-950/5 has-[input:focus]:ring-2">
-                    <Mail className="pointer-events-none absolute inset-y-0 left-4 my-auto size-4" />
-
-                    <input
-                      placeholder="Your mail address"
-                      className="h-12 w-full bg-transparent pl-12 focus:outline-none"
-                      type="email"
-                    />
-
-                    <div className="md:pr-1.5 lg:pr-0">
-                      <Button aria-label="submit" size="sm" className="rounded-(--radius)">
-                        <span className="hidden md:block">Join Network</span>
-                        <SendHorizonal className="relative mx-auto size-5 md:hidden" strokeWidth={2} />
-                      </Button>
-                    </div>
-                  </div>
-                </form>
-
-                <div className="mt-12 space-y-8">
-                    <div className="relative rounded-[1rem] bg-white/5 p-2">
-                      <CardStack className="w-full" />
-                    </div>
-              
-
-                
+              {/* CTA Section */}
+              <div className="mt-12 flex flex-col items-center gap-8">
+                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center">
+                  <Link href={'/membership'}>
+                  <Button className="bg-[#29688A] hover:bg-[#29688A]/90 text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 flex-1">
+                    <Users className="h-5 w-5" />
+                    Join Membership
+                  </Button>
+                  </Link>
+                  <Link href={'/about'}>
+                  <Button
+                    variant="outline"
+                    className="border-[#29688A] text-[#29688A] hover:bg-[#29688A] hover:text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 flex-1 bg-transparent"
+                  >
+                    Learn More
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  </Link>
                 </div>
-              </AnimatedGroup>
+
+                {/* Trust Indicators */}
+                <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-[#29688A]"></div>
+                    <span>50,000+ Members</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-[#29688A]"></div>
+                    <span>180+ Countries</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-[#29688A]"></div>
+                    <span>Trusted Since 1991</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </section>
-   
-      </main>
-    </>
+
+          {/* Services Cards */}
+          <div className="pb-16 sm:pb-20 lg:pb-24">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Our Services</h2>
+              <p className="mt-4 text-lg text-gray-600">Comprehensive solutions for your business growth</p>
+            </div>
+
+            <div className="relative">
+              <CardStack />
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   )
 }

@@ -21,10 +21,29 @@ export function Navbar({
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const [screenWidth, setScreenWidth] = useState(1024) // Default to desktop width
+  const [screenWidth, setScreenWidth] = useState(1024)
   const [isServicesOpen, setIsServicesOpen] = useState(false)
   const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false)
+  const [isEventsOpen, setIsEventsOpen] = useState(false)
+  const [isMobileEventsOpen, setIsMobileEventsOpen] = useState(false)
+  const [isWebinarOpen, setIsWebinarOpen] = useState(false)
+  const [isMobileWebinarOpen, setIsMobileWebinarOpen] = useState(false)
+  const [isInitiativesOpen, setIsInitiativesOpen] = useState(false)
+  const [isMobileInitiativesOpen, setIsMobileInitiativesOpen] = useState(false)
+  const [isPartnersOpen, setIsPartnersOpen] = useState(false)
+  const [isMobilePartnersOpen, setIsMobilePartnersOpen] = useState(false)
+  const [isAwardsOpen, setIsAwardsOpen] = useState(false)
+  const [isMobileAwardsOpen, setIsMobileAwardsOpen] = useState(false)
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false)
+  const [isMobileGalleryOpen, setIsMobileGalleryOpen] = useState(false)
+
   const servicesRef = useRef(null)
+  const eventsRef = useRef(null)
+  const webinarRef = useRef(null)
+  const initiativesRef = useRef(null)
+  const partnersRef = useRef(null)
+  const awardsRef = useRef(null)
+  const galleryRef = useRef(null)
 
   useEffect(() => {
     const handleResize = () => {
@@ -65,6 +84,24 @@ export function Navbar({
       if (servicesRef.current && !servicesRef.current.contains(event.target)) {
         setIsServicesOpen(false)
       }
+      if (eventsRef.current && !eventsRef.current.contains(event.target)) {
+        setIsEventsOpen(false)
+      }
+      if (webinarRef.current && !webinarRef.current.contains(event.target)) {
+        setIsWebinarOpen(false)
+      }
+      if (initiativesRef.current && !initiativesRef.current.contains(event.target)) {
+        setIsInitiativesOpen(false)
+      }
+      if (partnersRef.current && !partnersRef.current.contains(event.target)) {
+        setIsPartnersOpen(false)
+      }
+      if (awardsRef.current && !awardsRef.current.contains(event.target)) {
+        setIsAwardsOpen(false)
+      }
+      if (galleryRef.current && !galleryRef.current.contains(event.target)) {
+        setIsGalleryOpen(false)
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
@@ -84,13 +121,8 @@ export function Navbar({
     { name: "Team", href: "/team" },
     { name: "Membership", href: "/membership" },
     { name: "Events", href: "/events" },
-    { name: "Webinar", href: "/webinar" },
-    { name: "Initiatives", href: "/initiatives" },
-    { name: "Partners", href: "/partners" },
-    { name: "Awards", href: "/awards" },
-    { name: "Gallery", href: "/gallery" },
     { name: "News", href: "/news" },
-    { name: "Join Us", href: "/join-us" },
+    { name: "Join Us", href: "/membership" },
   ]
 
   const servicesOptions = [
@@ -98,12 +130,88 @@ export function Navbar({
     { name: "Overseas SMEs", href: "/services/service-overseas" },
   ]
 
+  const eventsOptions = [
+    { name: "Forthcoming Events", href: "/events/forthcoming-events" },
+    { name: "Supported Exhibitions", href: "/events/supported-exhibitions" },
+    { name: "Enquiry for Stall Booking", href: "/events/enquiry-for-stall-booking" },
+    { name: "Past Events", href: "/events/past-events" },
+  ]
+
+  const webinarOptions = [
+    { name: "Live", href: "/webinar/live" },
+    { name: "Past", href: "/webinar/past" },
+  ]
+
+  const initiativesOptions = [
+    {
+      name: "International Divisions",
+      href: "/initiatives/international-divisions",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      name: "National SME Manufacturing Mission",
+      href: "/initiatives/national-sme-manufacturing",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      name: "Invest in Indian SMEs",
+      href: "/initiatives/invest-indian-smes",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      name: "SME Export Promotion Facilitation Centre",
+      href: "/initiatives/export-promotion",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      name: "SME Electronic Products Export Promotion Council",
+      href: "/initiatives/electronic-export",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      name: "India SME Leadership Council",
+      href: "/initiatives/leadership-council",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      name: "Entrepreneurship Development Council",
+      href: "/initiatives/entrepreneurship-development",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      name: "Entrepreneurial Leadership Dialogue",
+      href: "/initiatives/entrepreneurial-dialogue",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+    {
+      name: "SME Connect Magazine",
+      href: "/initiatives/sme-connect-magazine",
+      image: "/placeholder.svg?height=40&width=40",
+    },
+  ]
+
+  const partnersOptions = [
+    { name: "Strategic Partners", href: "/partners/strategic-partners" },
+    { name: "Global Partners", href: "/partners/global-partners" },
+    { name: "SME Consultants", href: "/partners/sme-consultants" },
+  ]
+
+  const awardsOptions = [
+    { name: "About", href: "/awards/about" },
+    { name: "Apply", href: "https://indiasmeawards.com/apply-award.php" },
+  ]
+
+  const galleryOptions = [
+    { name: "Photo", href: "/gallery/photo" },
+    { name: "Video", href: "/gallery/video" },
+  ]
+
   return (
     <header className="w-full sticky top-0 z-50">
       <div
         className={cn(
           "bg-[#29688A]  backdrop-blur-md border-b border-gray-200 overflow-hidden transition-all duration-500 ease-in-out",
-          "hidden md:block", // Hidden on mobile
+          "hidden md:block",
           isScrolled ? "max-h-0 opacity-0 -translate-y-full" : "max-h-20 opacity-100 translate-y-0",
         )}
       >
@@ -137,7 +245,6 @@ export function Navbar({
               isScrolled ? "max-h-0 opacity-0 -translate-y-8 mb-0" : "max-h-32 opacity-100 translate-y-0 mb-4",
             )}
           >
-            {/* Left logo - always visible */}
             <div className="flex items-center">
               <Image
                 src={leftLogoSrc || "/placeholder.svg"}
@@ -171,7 +278,7 @@ export function Navbar({
             <div className="bg-white/90 backdrop-blur-md rounded-full px-6 py-3 border border-gray-200 shadow-lg transition-all duration-300">
               <NavigationMenu>
                 <NavigationMenuList className="flex items-center gap-1">
-                  {navItems.slice(0, 3).map((item) => (
+                  {navItems.slice(0, 4).map((item) => (
                     <NavigationMenuItem key={item.name}>
                       <NavigationMenuLink
                         href={item.href}
@@ -224,7 +331,230 @@ export function Navbar({
                     </div>
                   </NavigationMenuItem>
 
-                  {navItems.slice(3, screenWidth >= 1024 ? navItems.length : 7).map((item) => (
+                  <NavigationMenuItem>
+                    <div className="relative" ref={eventsRef}>
+                      <button
+                        onClick={() => setIsEventsOpen(!isEventsOpen)}
+                        className={cn(
+                          "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
+                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
+                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
+                          isEventsOpen && "bg-[#29688A] text-white",
+                        )}
+                      >
+                        Events
+                        <ChevronDown
+                          className={cn("ml-1 h-3 w-3 transition-transform duration-200", isEventsOpen && "rotate-180")}
+                        />
+                      </button>
+
+                      {isEventsOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                          {eventsOptions.map((option) => (
+                            <Link
+                              key={option.name}
+                              href={option.href}
+                              onClick={() => setIsEventsOpen(false)}
+                              className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white transition-colors duration-200"
+                            >
+                              {option.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </NavigationMenuItem>
+
+                  <NavigationMenuItem>
+                    <div className="relative" ref={webinarRef}>
+                      <button
+                        onClick={() => setIsWebinarOpen(!isWebinarOpen)}
+                        className={cn(
+                          "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
+                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
+                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
+                          isWebinarOpen && "bg-[#29688A] text-white",
+                        )}
+                      >
+                        Webinar
+                        <ChevronDown
+                          className={cn(
+                            "ml-1 h-3 w-3 transition-transform duration-200",
+                            isWebinarOpen && "rotate-180",
+                          )}
+                        />
+                      </button>
+
+                      {isWebinarOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                          {webinarOptions.map((option) => (
+                            <Link
+                              key={option.name}
+                              href={option.href}
+                              onClick={() => setIsWebinarOpen(false)}
+                              className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white transition-colors duration-200"
+                            >
+                              {option.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </NavigationMenuItem>
+
+                  <NavigationMenuItem>
+                    <div className="relative" ref={initiativesRef}>
+                      <button
+                        onClick={() => setIsInitiativesOpen(!isInitiativesOpen)}
+                        className={cn(
+                          "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
+                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
+                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
+                          isInitiativesOpen && "bg-[#29688A] text-white",
+                        )}
+                      >
+                        Initiatives
+                        <ChevronDown
+                          className={cn(
+                            "ml-1 h-3 w-3 transition-transform duration-200",
+                            isInitiativesOpen && "rotate-180",
+                          )}
+                        />
+                      </button>
+
+                      {isInitiativesOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-h-96 overflow-y-auto">
+                          {initiativesOptions.map((option) => (
+                            <Link
+                              key={option.name}
+                              href={option.href}
+                              onClick={() => setIsInitiativesOpen(false)}
+                              className="flex items-center gap-3 px-4 py-3 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white transition-colors duration-200"
+                            >
+                              <Image
+                                src={option.image || "/placeholder.svg"}
+                                alt={option.name}
+                                width={32}
+                                height={32}
+                                className="w-8 h-8 object-contain flex-shrink-0"
+                              />
+                              <span className="flex-1">{option.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </NavigationMenuItem>
+
+                  <NavigationMenuItem>
+                    <div className="relative" ref={partnersRef}>
+                      <button
+                        onClick={() => setIsPartnersOpen(!isPartnersOpen)}
+                        className={cn(
+                          "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
+                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
+                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
+                          isPartnersOpen && "bg-[#29688A] text-white",
+                        )}
+                      >
+                        Partners
+                        <ChevronDown
+                          className={cn(
+                            "ml-1 h-3 w-3 transition-transform duration-200",
+                            isPartnersOpen && "rotate-180",
+                          )}
+                        />
+                      </button>
+
+                      {isPartnersOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                          {partnersOptions.map((option) => (
+                            <Link
+                              key={option.name}
+                              href={option.href}
+                              onClick={() => setIsPartnersOpen(false)}
+                              className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white transition-colors duration-200"
+                            >
+                              {option.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </NavigationMenuItem>
+
+                  <NavigationMenuItem>
+                    <div className="relative" ref={awardsRef}>
+                      <button
+                        onClick={() => setIsAwardsOpen(!isAwardsOpen)}
+                        className={cn(
+                          "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
+                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
+                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
+                          isAwardsOpen && "bg-[#29688A] text-white",
+                        )}
+                      >
+                        Awards
+                        <ChevronDown
+                          className={cn("ml-1 h-3 w-3 transition-transform duration-200", isAwardsOpen && "rotate-180")}
+                        />
+                      </button>
+
+                      {isAwardsOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                          {awardsOptions.map((option) => (
+                            <Link
+                              key={option.name}
+                              href={option.href}
+                              onClick={() => setIsAwardsOpen(false)}
+                              className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white transition-colors duration-200"
+                            >
+                              {option.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </NavigationMenuItem>
+
+                  <NavigationMenuItem>
+                    <div className="relative" ref={galleryRef}>
+                      <button
+                        onClick={() => setIsGalleryOpen(!isGalleryOpen)}
+                        className={cn(
+                          "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
+                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
+                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
+                          isGalleryOpen && "bg-[#29688A] text-white",
+                        )}
+                      >
+                        Gallery
+                        <ChevronDown
+                          className={cn(
+                            "ml-1 h-3 w-3 transition-transform duration-200",
+                            isGalleryOpen && "rotate-180",
+                          )}
+                        />
+                      </button>
+
+                      {isGalleryOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                          {galleryOptions.map((option) => (
+                            <Link
+                              key={option.name}
+                              href={option.href}
+                              onClick={() => setIsGalleryOpen(false)}
+                              className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white transition-colors duration-200"
+                            >
+                              {option.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </NavigationMenuItem>
+
+                  {navItems.slice(5).map((item) => (
                     <NavigationMenuItem key={item.name}>
                       <NavigationMenuLink
                         href={item.href}
@@ -293,7 +623,194 @@ export function Navbar({
               )}
             </div>
 
-            {navItems.slice(3).map((item) => (
+            <div>
+              <button
+                onClick={() => setIsMobileEventsOpen(!isMobileEventsOpen)}
+                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+              >
+                Events
+                <ChevronDown
+                  className={cn("h-4 w-4 transition-transform duration-200", isMobileEventsOpen && "rotate-180")}
+                />
+              </button>
+
+              {isMobileEventsOpen && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {eventsOptions.map((option) => (
+                    <Link
+                      key={option.name}
+                      href={option.href}
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsMobileEventsOpen(false)
+                      }}
+                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                    >
+                      {option.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <button
+                onClick={() => setIsMobileWebinarOpen(!isMobileWebinarOpen)}
+                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+              >
+                Webinar
+                <ChevronDown
+                  className={cn("h-4 w-4 transition-transform duration-200", isMobileWebinarOpen && "rotate-180")}
+                />
+              </button>
+
+              {isMobileWebinarOpen && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {webinarOptions.map((option) => (
+                    <Link
+                      key={option.name}
+                      href={option.href}
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsMobileWebinarOpen(false)
+                      }}
+                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                    >
+                      {option.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <button
+                onClick={() => setIsMobileInitiativesOpen(!isMobileInitiativesOpen)}
+                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+              >
+                Initiatives
+                <ChevronDown
+                  className={cn("h-4 w-4 transition-transform duration-200", isMobileInitiativesOpen && "rotate-180")}
+                />
+              </button>
+
+              {isMobileInitiativesOpen && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {initiativesOptions.map((option) => (
+                    <Link
+                      key={option.name}
+                      href={option.href}
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsMobileInitiativesOpen(false)
+                      }}
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                    >
+                      <Image
+                        src={option.image || "/placeholder.svg"}
+                        alt={option.name}
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 object-contain flex-shrink-0"
+                      />
+                      <span className="flex-1">{option.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <button
+                onClick={() => setIsMobilePartnersOpen(!isMobilePartnersOpen)}
+                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+              >
+                Partners
+                <ChevronDown
+                  className={cn("h-4 w-4 transition-transform duration-200", isMobilePartnersOpen && "rotate-180")}
+                />
+              </button>
+
+              {isMobilePartnersOpen && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {partnersOptions.map((option) => (
+                    <Link
+                      key={option.name}
+                      href={option.href}
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsMobilePartnersOpen(false)
+                      }}
+                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                    >
+                      {option.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <button
+                onClick={() => setIsMobileAwardsOpen(!isMobileAwardsOpen)}
+                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+              >
+                Awards
+                <ChevronDown
+                  className={cn("h-4 w-4 transition-transform duration-200", isMobileAwardsOpen && "rotate-180")}
+                />
+              </button>
+
+              {isMobileAwardsOpen && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {awardsOptions.map((option) => (
+                    <Link
+                      key={option.name}
+                      href={option.href}
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsMobileAwardsOpen(false)
+                      }}
+                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                    >
+                      {option.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <button
+                onClick={() => setIsMobileGalleryOpen(!isMobileGalleryOpen)}
+                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+              >
+                Gallery
+                <ChevronDown
+                  className={cn("h-4 w-4 transition-transform duration-200", isMobileGalleryOpen && "rotate-180")}
+                />
+              </button>
+
+              {isMobileGalleryOpen && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {galleryOptions.map((option) => (
+                    <Link
+                      key={option.name}
+                      href={option.href}
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsMobileGalleryOpen(false)
+                      }}
+                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                    >
+                      {option.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {navItems.slice(5).map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -312,7 +829,7 @@ export function Navbar({
                     key={index}
                     href={social.href}
                     className={cn(
-                      "p-2 rounded-full bg-white border border-gray-200 transition-all duration-200 hover:scale-110 text-[#29688A]",
+                      "p-2 rounded-full bg-white border border-gray-200 transition-all duration-200 hover:scale-110 text-[#29688A] ",
                       social.color,
                     )}
                   >
