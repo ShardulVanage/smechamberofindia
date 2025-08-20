@@ -45,19 +45,15 @@ export default function ServicesSection() {
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
   return (
-    <section
-      className="py-20 px-4 relative max-w-7xl mx-auto rounded-4xl"
-      
-    >
-      <div className="absolute inset-0 bg-white backdrop-blur-sm"></div>
+    <section className="py-20 px-4 relative max-w-7xl mx-auto rounded-4xl">
+      <div className="absolute inset-0 bg-[#29688A]/10 backdrop-blur-sm rounded-3xl"></div>
 
-      <div className=" relative z-10">
+      <div className="relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-block">
-                   <h2 className="relative z-10 max-w-7xl text-4xl font-medium lg:text-5xl text-center text-neutral-950">Join Us</h2>
-
-          </div>
+          <h2 className="relative z-10 max-w-7xl text-4xl font-bold lg:text-5xl text-center text-[#29688A]">
+            Join Us
+          </h2>
         </div>
 
         {/* Services Grid */}
@@ -78,18 +74,18 @@ export default function ServicesSection() {
                 <div className="relative mb-4">
                   <div
                     className={`
-                      w-20 h-20 rounded-full bg-white/70 backdrop-blur-md border border-white/30
+                      w-20 h-20 rounded-full bg-[#29688A] backdrop-blur-md border border-[#29688A]/40
                       flex items-center justify-center shadow-lg
                       transform transition-all duration-500 ease-out
                       group-hover:scale-110 group-hover:shadow-2xl
                       animate-fade-in-up
-                      ${hoveredIndex === index ? "rotate-12 bg-gray-900" : ""}
+                      ${hoveredIndex === index ? "bg-[#29688A]" : ""}
                     `}
                   >
                     <Icon
                       className={`
-                        w-8 h-8 text-[#29688A] transition-all duration-300
-                        ${hoveredIndex === index ? "scale-110  text-[#29688A] " : "text-gray-900"}
+                        w-8 h-8 transition-all duration-300
+                        ${hoveredIndex === index ? "scale-110 text-white" : "text-white"}
                       `}
                     />
                   </div>
@@ -107,17 +103,17 @@ export default function ServicesSection() {
                 <div className="space-y-1">
                   <h3
                     className={`
-                      font-semibold text-gray-800 transition-all duration-300
+                      font-semibold text-[#29688A] transition-all duration-300
                       text-sm lg:text-base
-                      ${hoveredIndex === index ? "transform -translate-y-1 text-gray-900 font-bold" : ""}
+                      ${hoveredIndex === index ? "transform -translate-y-1 font-bold" : ""}
                     `}
                   >
                     {service.title}
                   </h3>
                   <p
                     className={`
-                      text-xs text-gray-600 transition-all duration-300
-                      ${hoveredIndex === index ? "text-gray-800 opacity-100 font-medium" : "opacity-70"}
+                      text-xs transition-all duration-300
+                      ${hoveredIndex === index ? "text-[#29688A] opacity-100 font-medium" : "text-gray-600 opacity-80"}
                     `}
                   >
                     {service.description}
@@ -126,7 +122,7 @@ export default function ServicesSection() {
 
                 <div
                   className={`
-                    mt-3 h-0.5 bg-gradient-to-r from-gray-600 to-[#29688A] rounded-full
+                    mt-3 h-0.5 bg-gradient-to-r from-white to-[#29688A] rounded-full
                     transition-all duration-500 ease-out
                     ${hoveredIndex === index ? "w-12 opacity-100" : "w-0 opacity-0"}
                   `}
@@ -148,7 +144,7 @@ export default function ServicesSection() {
             transform: translateY(0);
           }
         }
-        
+
         .animate-fade-in-up {
           animation: fade-in-up 0.6s ease-out forwards;
         }

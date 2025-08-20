@@ -10,13 +10,14 @@ import JoinusSection from "@/components/Joinus";
 import Members from "@/components/Member";
 import { StrategicPartners } from "@/components/strategic-partners";
 import SupportedExibition from "@/components/SupportedExibition";
+import { Testimonials } from "@/components/Testimonial";
+
 
 
 
 export default function Home() {
   return (
    <main>
-    
     <HeroSection/>
     <StrategicPartners/>
     <EventSponsors/>
@@ -26,6 +27,7 @@ export default function Home() {
     <JoinusSection/>
     <Initiatives/>
     <Division/>
+    {/* <Testimonials/> */}
     <Footer/>
    </main>
   );

@@ -237,7 +237,19 @@ export function Navbar({
       </div>
 
       {/* Main navbar */}
-      <div className="bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all duration-500">
+      <div className="bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all duration-500 ">
+      {/* <div 
+    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+    style={{
+      backgroundImage: "url('/parliamentbg.jpg')"
+    }}
+  /> */}
+  
+  {/* Black Overlay */}
+  <div className="absolute inset-0 bg-blue/50" />
+
+
+  
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div
             className={cn(
@@ -269,13 +281,13 @@ export function Navbar({
                 alt="Right Logo"
                 width={100}
                 height={50}
-                className="h-16 md:h-20 lg:h-24 w-auto object-contain transition-all duration-500"
+                className="h-16 md:h-20 lg:h-24 w-auto object-contain transition-all duration-500 drop-shadow-2xl "
               />
             </div>
           </div>
 
-          <div className="hidden md:flex justify-center">
-            <div className="bg-white/90 backdrop-blur-md rounded-full px-6 py-3 border border-gray-200 shadow-lg transition-all duration-300">
+        <div className="hidden md:flex justify-center">
+            <div className="bg-[#29688A]/90 backdrop-blur-md rounded-full px-6 py-3 border border-[#29688A] shadow-lg transition-all duration-300">
               <NavigationMenu>
                 <NavigationMenuList className="flex items-center gap-1">
                   {navItems.slice(0, 4).map((item) => (
@@ -284,9 +296,9 @@ export function Navbar({
                         href={item.href}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          "data-[active]:bg-[#29688A] data-[active]:text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          "data-[active]:bg-white data-[active]:text-[#29688A]",
                         )}
                       >
                         {item.name}
@@ -300,9 +312,9 @@ export function Navbar({
                         onClick={() => setIsServicesOpen(!isServicesOpen)}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          isServicesOpen && "bg-[#29688A] text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          isServicesOpen && "bg-white text-[#29688A]",
                         )}
                       >
                         Services
@@ -337,9 +349,9 @@ export function Navbar({
                         onClick={() => setIsEventsOpen(!isEventsOpen)}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          isEventsOpen && "bg-[#29688A] text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          isEventsOpen && "bg-white text-[#29688A]",
                         )}
                       >
                         Events
@@ -371,9 +383,9 @@ export function Navbar({
                         onClick={() => setIsWebinarOpen(!isWebinarOpen)}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          isWebinarOpen && "bg-[#29688A] text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          isWebinarOpen && "bg-white text-[#29688A]",
                         )}
                       >
                         Webinar
@@ -408,9 +420,9 @@ export function Navbar({
                         onClick={() => setIsInitiativesOpen(!isInitiativesOpen)}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          isInitiativesOpen && "bg-[#29688A] text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          isInitiativesOpen && "bg-white text-[#29688A]",
                         )}
                       >
                         Initiatives
@@ -452,9 +464,9 @@ export function Navbar({
                         onClick={() => setIsPartnersOpen(!isPartnersOpen)}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          isPartnersOpen && "bg-[#29688A] text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          isPartnersOpen && "bg-white text-[#29688A]",
                         )}
                       >
                         Partners
@@ -489,9 +501,9 @@ export function Navbar({
                         onClick={() => setIsAwardsOpen(!isAwardsOpen)}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          isAwardsOpen && "bg-[#29688A] text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          isAwardsOpen && "bg-white text-[#29688A]",
                         )}
                       >
                         Awards
@@ -523,9 +535,9 @@ export function Navbar({
                         onClick={() => setIsGalleryOpen(!isGalleryOpen)}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          isGalleryOpen && "bg-[#29688A] text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          isGalleryOpen && "bg-white text-[#29688A]",
                         )}
                       >
                         Gallery
@@ -560,9 +572,9 @@ export function Navbar({
                         href={item.href}
                         className={cn(
                           "group inline-flex h-10 w-max items-center justify-center rounded-full px-3 lg:px-6 py-2 text-xs lg:text-sm font-medium transition-all duration-200",
-                          "text-[#29688A] hover:text-white hover:bg-[#29688A] hover:backdrop-blur-sm",
-                          "focus:bg-[#29688A] focus:text-white focus:outline-none",
-                          "data-[active]:bg-[#29688A] data-[active]:text-white",
+                          "text-white hover:text-[#29688A] hover:bg-white hover:backdrop-blur-sm",
+                          "focus:bg-white focus:text-[#29688A] focus:outline-none",
+                          "data-[active]:bg-white data-[active]:text-[#29688A]",
                         )}
                       >
                         {item.name}
@@ -577,7 +589,7 @@ export function Navbar({
 
         <div
           className={cn(
-            "md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 overflow-y-auto transition-all duration-300 ease-in-out",
+            "md:hidden bg-[#29688A]/95 backdrop-blur-md border-t border-[#29688A] overflow-y-auto transition-all duration-300 ease-in-out",
             isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0",
           )}
         >
@@ -587,7 +599,7 @@ export function Navbar({
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="block px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 {item.name}
               </Link>
@@ -596,7 +608,7 @@ export function Navbar({
             <div>
               <button
                 onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 Services
                 <ChevronDown
@@ -614,7 +626,7 @@ export function Navbar({
                         setIsMenuOpen(false)
                         setIsMobileServicesOpen(false)
                       }}
-                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                      className="block px-4 py-2 text-sm text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200"
                     >
                       {option.name}
                     </Link>
@@ -626,7 +638,7 @@ export function Navbar({
             <div>
               <button
                 onClick={() => setIsMobileEventsOpen(!isMobileEventsOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 Events
                 <ChevronDown
@@ -644,7 +656,7 @@ export function Navbar({
                         setIsMenuOpen(false)
                         setIsMobileEventsOpen(false)
                       }}
-                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                      className="block px-4 py-2 text-sm text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200"
                     >
                       {option.name}
                     </Link>
@@ -656,7 +668,7 @@ export function Navbar({
             <div>
               <button
                 onClick={() => setIsMobileWebinarOpen(!isMobileWebinarOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 Webinar
                 <ChevronDown
@@ -674,7 +686,7 @@ export function Navbar({
                         setIsMenuOpen(false)
                         setIsMobileWebinarOpen(false)
                       }}
-                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                      className="block px-4 py-2 text-sm text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200"
                     >
                       {option.name}
                     </Link>
@@ -686,7 +698,7 @@ export function Navbar({
             <div>
               <button
                 onClick={() => setIsMobileInitiativesOpen(!isMobileInitiativesOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 Initiatives
                 <ChevronDown
@@ -704,7 +716,7 @@ export function Navbar({
                         setIsMenuOpen(false)
                         setIsMobileInitiativesOpen(false)
                       }}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200"
                     >
                       <Image
                         src={option.image || "/placeholder.svg"}
@@ -723,7 +735,7 @@ export function Navbar({
             <div>
               <button
                 onClick={() => setIsMobilePartnersOpen(!isMobilePartnersOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 Partners
                 <ChevronDown
@@ -741,7 +753,7 @@ export function Navbar({
                         setIsMenuOpen(false)
                         setIsMobilePartnersOpen(false)
                       }}
-                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                      className="block px-4 py-2 text-sm text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200"
                     >
                       {option.name}
                     </Link>
@@ -753,7 +765,7 @@ export function Navbar({
             <div>
               <button
                 onClick={() => setIsMobileAwardsOpen(!isMobileAwardsOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 Awards
                 <ChevronDown
@@ -771,7 +783,7 @@ export function Navbar({
                         setIsMenuOpen(false)
                         setIsMobileAwardsOpen(false)
                       }}
-                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                      className="block px-4 py-2 text-sm text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200"
                     >
                       {option.name}
                     </Link>
@@ -783,7 +795,7 @@ export function Navbar({
             <div>
               <button
                 onClick={() => setIsMobileGalleryOpen(!isMobileGalleryOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 Gallery
                 <ChevronDown
@@ -801,7 +813,7 @@ export function Navbar({
                         setIsMenuOpen(false)
                         setIsMobileGalleryOpen(false)
                       }}
-                      className="block px-4 py-2 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200"
+                      className="block px-4 py-2 text-sm text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200"
                     >
                       {option.name}
                     </Link>
@@ -815,13 +827,13 @@ export function Navbar({
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-[#29688A] hover:bg-[#29688A] hover:text-white rounded-lg transition-all duration-200 font-medium"
+                className="block px-4 py-3 text-white hover:bg-white hover:text-[#29688A] rounded-lg transition-all duration-200 font-medium"
               >
                 {item.name}
               </Link>
             ))}
 
-            <div className="flex justify-center gap-4 pt-4 border-t border-gray-200 mt-4">
+            <div className="flex justify-center gap-4 pt-4 border-t border-white/20 mt-4">
               {socialLinks.map((social, index) => {
                 const Icon = social.icon
                 return (
@@ -829,7 +841,7 @@ export function Navbar({
                     key={index}
                     href={social.href}
                     className={cn(
-                      "p-2 rounded-full bg-white border border-gray-200 transition-all duration-200 hover:scale-110 text-[#29688A] ",
+                      "p-2 rounded-full bg-white border border-white/20 transition-all duration-200 hover:scale-110 text-[#29688A] ",
                       social.color,
                     )}
                   >

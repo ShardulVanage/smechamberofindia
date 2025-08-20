@@ -12,37 +12,44 @@
 
   import { motion } from "motion/react"
   import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { Button } from "./ui/button"
 
   const products = [
     {
-      id: "business-registration",
-      title: "Business Registration",
-      subtitle: "Company Setup",
-      image:
-        "https://plus.unsplash.com/premium_photo-1661497281000-b5ecb39a2114?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      specs: [
-        { label: "Process", value: "Simplified" },
-        { label: "Time", value: "7-15 days" },
-        { label: "Support", value: "Expert" },
-        { label: "Cost", value: "Affordable" },
-      ],
-    },
-    {
-      id: "export-assistance",
-      title: "Export Assistance",
+      id: "SME-Marketplace",
+      href:"https://market-app-bice.vercel.app/",
+      title: "SME Marketplace",
       subtitle: "Global Markets",
       image:
-        "https://images.unsplash.com/photo-1449586919022-f3dfddc48a71?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1642543348745-03b1219733d9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       specs: [
-        { label: "Markets", value: "180+" },
+      
+         { label: "Markets", value: "180+" },
         { label: "Guidance", value: "Complete" },
         { label: "Documentation", value: "Full" },
         { label: "Success", value: "Proven" },
       ],
     },
     {
-      id: "networking",
-      title: "Networking",
+      id: "SME-talks",
+      title: "SME talks",
+      href:"https://smetalks.com/",
+      subtitle: "Global Markets",
+      image:
+        "https://images.unsplash.com/photo-1449586919022-f3dfddc48a71?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      specs: [
+       { label: "Process", value: "Simplified" },
+        { label: "Time", value: "7-15 days" },
+        { label: "Support", value: "Expert" },
+        { label: "Cost", value: "Affordable" },
+
+      ],
+    },
+    {
+      id: "SME-Coach",
+      title: "SMECoach",
+      href:"https://smecoach.in/index.php#",
       subtitle: "Business Connections",
       image:
         "https://plus.unsplash.com/premium_photo-1665203422028-68d636f2c944?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -54,8 +61,9 @@
       ],
     },
     {
-      id: "training",
-      title: "Training & Development",
+      id: "brand-smes",
+      title: "Brand Smes",
+      href:"https://brandsmes.com/",
       subtitle: "Skill Enhancement",
       image:
         "https://images.unsplash.com/photo-1568992688065-536aad8a12f6?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -139,6 +147,8 @@
         <div className="absolute inset-1 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm border border-neutral-200/50 dark:border-neutral-700/50" />
 
         <div className="relative z-10">
+          <Link href={product.href} >
+          
           {/* Specs Grid */}
           <dl className="mb-4 grid grid-cols-4 gap-2 justify-center">
             {product.specs.map((spec) => (
@@ -169,14 +179,19 @@
 
           <div className="mt-4">
             <div className="space-y-1">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white text-left">
+              <h2 className="text-3xl font-bold tracking-tight text-[#29688A]/90 dark:text-white text-left">
                 {product.title}
               </h2>
               <span className="block text-2xl font-semibold tracking-tight bg-gradient-to-b from-gray-100 via-gray-500 to-[#29688A] dark:from-gray-200 dark:via-white dark:to-gray-300 bg-clip-text text-transparent text-left">
                 {product.subtitle}
               </span>
             </div>
+            <Button
+            size={"sm"} className={'mt-3 bg-[#29688A] hover:bg-[#29688A]/90'}>
+              Visit know
+            </Button>
           </div>
+        </Link>       
         </div>
       </motion.div>
     )
