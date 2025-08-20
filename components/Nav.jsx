@@ -66,7 +66,7 @@ export function Navbar({
           const scrollTop = window.scrollY
           if (scrollTop > 100 && !isScrolled) {
             setIsScrolled(true)
-          } else if (scrollTop <= 10 && isScrolled) {
+          } else if (scrollTop <= 5 && isScrolled) {
             setIsScrolled(false)
           }
           ticking = false
@@ -143,6 +143,11 @@ export function Navbar({
   ]
 
   const initiativesOptions = [
+    {
+      name: "initiatives ",
+      href: "/initiatives",
+      image: "/placeholder.svg?height=40&width=40",
+    },
     {
       name: "International Divisions",
       href: "/initiatives/international-divisions",

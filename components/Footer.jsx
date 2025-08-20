@@ -5,7 +5,7 @@ export default function Footer() {
         
         {/* Logo / About */}
         <div>
-          <img src="/sme-logo.svg"/>
+          <img src="/sme-logo.svg" />
           <p className="text-sm text-gray-200 my-4">
             Empowering SMEs for global success through growth, export promotion, 
             and technology-driven opportunities.
