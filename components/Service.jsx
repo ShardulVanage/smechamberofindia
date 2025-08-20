@@ -7,7 +7,11 @@ function Service() {
        {/* Services Cards */}
           <div className="pb-16 sm:pb-20 lg:pb-24 pt-24">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Our Services</h2>
+              <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl"> </h2>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                          
+            <span className="  text-[#29688A]"> Services</span>
+          </h2>
               <p className="mt-4 text-lg text-gray-600">Comprehensive solutions for your business growth</p>
             </div>
 
