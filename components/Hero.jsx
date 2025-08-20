@@ -12,14 +12,14 @@ export default function HeroSection() {
           <div className="pt-20 pb-24 sm:pt-24 lg:pt-24">
             <div className="text-center">
               {/* Badge */}
-              <div className="inline-flex items-center rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary ring-1 ring-primary/20 mb-8">
+              <div className="inline-flex items-center rounded-full bg-[#29688A]/10 px-4 py-2 text-sm font-medium text-[#29688A] ring-1 ring-[#29688A]/20 mb-8">
                 <span>32 Years of Excellence</span>
               </div>
 
               {/* Main Heading */}
               <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
                 <span className="block">Empowering SMEs for</span>
-                <span className="block text-primary">Global Success</span>
+                <span className="block text-[#29688A]">Global Success</span>
               </h1>
 
               {/* Description */}
@@ -32,7 +32,7 @@ export default function HeroSection() {
               <div className="mt-12 flex flex-col items-center gap-8 relative z-30">
                 <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center items-center">
                   <Link href="/membership">
-                    <Button  className="flex items-center justify-center gap-2 flex-1">
+                    <Button  className="flex items-center justify-center gap-2 flex-1 bg-[#29688A]">
                       <Users className="h-5 w-5" />
                       Join Membership
                     </Button>
@@ -40,7 +40,7 @@ export default function HeroSection() {
                   <Link href="/about">
                     <Button
                    
-                      className="flex items-center justify-center gap-2 flex-1"
+                      className="flex items-center justify-center gap-2 flex-1 bg-[#29688A] "
                     >
                       Learn More
                       <ArrowRight className="h-4 w-4" />
@@ -51,15 +51,15 @@ export default function HeroSection() {
                 {/* Trust Indicators */}
                 <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary"></div>
+                    <div className="h-2 w-2 rounded-full bg-[#29688A]"></div>
                     <span>50,000+ Members</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary"></div>
+                    <div className="h-2 w-2 rounded-full bg-[#29688A]"></div>
                     <span>180+ Countries</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary"></div>
+                    <div className="h-2 w-2 rounded-full bg-[#29688A]"></div>
                     <span>Trusted Since 1991</span>
                   </div>
                 </div>
