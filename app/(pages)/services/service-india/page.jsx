@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
 import { ArrowRight, Building2, DollarSign, Globe, TrendingUp, Users, Zap, ChevronDown, UserPlus } from "lucide-react"
+import Link from "next/link"
 
 const services = [
   {
@@ -245,6 +246,7 @@ export default function SMEIndiaPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                      <Link href='/membership'>
                       <motion.button
                         whileHover={{ scale: 1.05, boxShadow: "0 8px 25px rgba(41, 104, 138, 0.3)" }}
                         whileTap={{ scale: 0.95 }}
@@ -252,10 +254,11 @@ export default function SMEIndiaPage() {
                           e.stopPropagation() // Prevent dropdown toggle when clicking button
                         }}
                         className="bg-[#29688A] text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow-md hover:bg-[#29688A]/90 transition-all duration-300 text-sm"
-                      >
+                        >
                         <UserPlus className="w-4 h-4" />
                         Join Membership
                       </motion.button>
+                        </Link>
 
                       <motion.div
                         animate={{ rotate: openSections[sectionIndex] ? 180 : 0 }}

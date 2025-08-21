@@ -37,7 +37,7 @@ const SMEManufacturingMission = () => {
           <div className="flex justify-center">
                <Link href={'https://smemanufacturingmission.com/'}>
             <Card className="w-full max-w-4xl shadow-lg bg-white">
-              <Image src="/NSMEM.jpg" alt="SME Manufacturing Mission Poster" className='w-auto' width={600} height={900}/>
+              <Image src="/assets/initiative/nsmem.jpg" alt="SME Manufacturing Mission Poster" className='w-auto' width={600} height={900}/>
             </Card>
             </Link>
           </div>

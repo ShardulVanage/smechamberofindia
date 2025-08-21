@@ -448,13 +448,13 @@ export function Navbar({
                               onClick={() => setIsInitiativesOpen(false)}
                               className="flex items-center gap-3 px-4 py-3 text-sm text-[#29688A] hover:bg-[#29688A] hover:text-white transition-colors duration-200"
                             >
-                              <Image
+                              {/* <Image
                                 src={option.image || "/placeholder.svg"}
                                 alt={option.name}
                                 width={32}
                                 height={32}
                                 className="w-8 h-8 object-contain flex-shrink-0"
-                              />
+                              /> */}
                               <span className="flex-1">{option.name}</span>
                             </Link>
                           ))}

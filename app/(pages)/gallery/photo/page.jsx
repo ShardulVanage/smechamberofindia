@@ -60,7 +60,7 @@ export default function PhotoGallery() {
             >
               <div className="relative overflow-hidden">
                 <img
-                  src={photo.src || "/placeholder.svg"}
+                  src={photo.src}
                   alt={photo.title}
                   className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                 />
