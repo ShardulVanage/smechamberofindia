@@ -98,26 +98,15 @@ export default function AboutSection() {
               <div className="absolute inset-0 bg-gradient-to-br from-[#29688A]/10 to-transparent"></div>
 
               <Image
-                src="https://lh3.googleusercontent.com/p/AF1QipP-5OLMMOJ5hcLWVGF6cw13VdxfiGrqbW3ZkneD=s1360-w1360-h1020-rw"
-                className="w-full h-auto rounded-2xl"
+                src="/abouthome.png"
+                className="w-full h-auto rounded-2xl object-contain"
                 alt="SME Chamber networking and business growth"
                 width={600}
                 height={400}
                 priority
               />
 
-              {/* Floating accent card */}
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-lg border border-gray-100 hidden sm:block">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#29688A] rounded-full flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">Growing Together</div>
-                    <div className="text-sm text-gray-600">Since 1992</div>
-                  </div>
-                </div>
-              </div>
+           
             </div>
           </div>
         </div>

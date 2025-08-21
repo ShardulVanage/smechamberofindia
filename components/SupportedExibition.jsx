@@ -31,10 +31,10 @@ export default function SupportedExibition() {
 
   return (
     <section className="py-16 md:py-32">
-      <div className="mx-auto max-w-7xl space-y-8 px-6 md:space-y-12">
         <h2 className="relative z-10 mx-auto max-w-3xl text-4xl font-medium lg:text-5xl text-center">
         Exhibitions We've Proudly Supported
         </h2>
+      <div className="mx-auto max-w-7xl space-y-8 px-6 md:space-y-12 pt-16 bg-[#29688A]/10 backdrop-blur-sm p-6 mt-12 rounded-4xl">
         <div className="grid gap-6 sm:grid-cols-2 md:gap-3 lg:gap-4">
           <div className="relative mb-6 sm:mb-0">
             <div className="bg-linear-to-b aspect-5/2 relative rounded-2xl from-zinc-300 to-transparent p-px dark:from-zinc-700">

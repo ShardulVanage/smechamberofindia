@@ -14,7 +14,7 @@ export default function PhotoGallery() {
   },
   {
     id: 2,
-    src: "/assets/gallery/ramdas.jpg",
+    src: "/ramdas.jpg",
     title: "Felicitating Hon'ble Minister Shri Ramdas Athawale",
     description:
       "Shri Chandrakant Salunkhe, Founder & President of the SME Chamber of India and Maharashtra Industry Development Association, felicitates Shri Ramdas Athawale with flowers on his appointment as Minister of State for Social Justice & Empowerment, Government of India on 28th June 2024 at New Delhi",
