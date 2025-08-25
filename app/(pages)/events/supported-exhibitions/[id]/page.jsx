@@ -1,20 +1,66 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { eventsData } from "@/lib/sample-data/events-data"
+import { getClientPb } from "@/lib/pocketbase"
+import { usePocketBaseFetchWithLoading } from "@/hooks/use-pocketbase-fetch"
+
 
 export default function EventDetail({ params }) {
   const { id } = React.use(params)
+  const [event, setEvent] = useState(null)
+  const [error, setError] = useState(null)
 
-  const event = eventsData.find((event) => event.id === Number.parseInt(id))
+  const isLoading = usePocketBaseFetchWithLoading(
+    async (signal) => {
+      try {
+        const pb = getClientPb()
+        const response = await pb.collection("supported_exhibitions").getOne(id, {
+          requestKey: null, // Disable auto-cancellation for this specific request
+        })
 
-  if (!event) {
+        if (!signal.aborted) {
+          setEvent(response )
+          setError(null)
+        }
+      } catch (err) {
+        if (!signal.aborted) {
+          console.error("Error fetching event:", err)
+          setError("Event not found or failed to load.")
+        }
+      }
+    },
+    [id], // Refetch when ID changes
+    200, // 200ms delay
+  )
+
+  const getBannerImageUrl = () => {
+    if (!event?.bannerImageScreen && !event?.bannerImageFront) {
+      return "/vibrant-event-banner.png"
+    }
+    const pb = getClientPb()
+    const imageField = event.bannerImageScreen || event.bannerImageFront
+    return pb.files.getUrl(event, imageField)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#29688A] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading event details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !event) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Event Not Found</h1>
+          <p className="text-gray-600 mb-4">{error || "The requested event could not be found."}</p>
           <Link href="/events/forthcoming-events" className="text-[#29688A] hover:underline">
             Back to Events
           </Link>
@@ -65,9 +111,9 @@ export default function EventDetail({ params }) {
             {/* Banner Image */}
             <div className="mb-8">
               <img
-                src={event.bannerImage || "/placeholder.svg"}
+                src={getBannerImageUrl() || "/placeholder.svg"}
                 alt={event.title}
-                className="w-full h-64 md:h-80 object-cover rounded-lg shadow-lg"
+                className="w-full h-64 md:h-[700px] object-contain rounded-lg shadow-lg"
               />
             </div>
 
@@ -106,7 +152,14 @@ export default function EventDetail({ params }) {
                   </svg>
                   <div>
                     <p className="font-medium text-gray-900">Date</p>
-                    <p className="text-gray-600">{event.eventDate}</p>
+                    <p className="text-gray-600">
+                      {new Date(event.eventDate).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
                   </div>
                 </div>
 

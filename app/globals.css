@@ -120,3 +120,68 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+/* Custom styles for TipTap rich text content */
+.rich-text-content .ProseMirror {
+  outline: none;
+}
+
+.rich-text-content .prose {
+  color: rgb(55 65 81);
+  max-width: none;
+}
+
+.rich-text-content .prose h1,
+.rich-text-content .prose h2,
+.rich-text-content .prose h3,
+.rich-text-content .prose h4 {
+  color: rgb(17 24 39);
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.rich-text-content .prose h1 {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+.rich-text-content .prose h2 {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.rich-text-content .prose h3 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.rich-text-content .prose p {
+  margin-bottom: 1.25rem;
+  line-height: 1.75;
+}
+
+.rich-text-content .prose ul,
+.rich-text-content .prose ol {
+  margin: 1.25rem 0;
+  padding-left: 1.625rem;
+}
+
+.rich-text-content .prose li {
+  margin: 0.5rem 0;
+  line-height: 1.75;
+}
+
+.rich-text-content .prose strong {
+  font-weight: 600;
+  color: rgb(17 24 39);
+}
+
+.rich-text-content .prose blockquote {
+  border-left: 4px solid rgb(229 231 235);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: rgb(75 85 99);
+}

@@ -1,32 +1,49 @@
 "use client"
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { getClientPb } from "@/lib/pocketbase"
+import { usePocketBaseFetchWithLoading } from "@/hooks/use-pocketbase-fetch"
+
 
 export default function PhotoGallery() {
   const [selectedPhoto, setSelectedPhoto] = useState(null)
+  const [photos, setPhotos] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
 
-  const photos = [
-  {
-    id: 1,
-    src: "/assets/gallery/ncm.jpg",
-    title: "Meeting with Hon'ble Prime Minister Shri Narendra Modi",
-    description:
-      "Shri Chandrakant Salunkhe, Founder and President - SME Chamber of India and Start-Ups Council of India met Hon'ble Prime Minister of India Shri Narendra Modi on 27th December 2019 at his residence and submitted suggestions and recommendations for the empowerment of SME sector, Manufacturing and Start Ups.",
-  },
-  {
-    id: 2,
-    src: "/ramdas.jpg",
-    title: "Felicitating Hon'ble Minister Shri Ramdas Athawale",
-    description:
-      "Shri Chandrakant Salunkhe, Founder & President of the SME Chamber of India and Maharashtra Industry Development Association, felicitates Shri Ramdas Athawale with flowers on his appointment as Minister of State for Social Justice & Empowerment, Government of India on 28th June 2024 at New Delhi",
-  },
-  {
-    id: 3,
-    src: "/assets/gallery/Narayan_Rane.jpg",
-    title: "Activity Report Release by Hon'ble Union Minister Shri Narayan Rane",
-    description:
-      "Shri Narayan Rane - Hon'ble Union Minister of MSME, Government of India has released the Activity Report of SME Chamber of India and SMEConnect – Magazine for the year 2022 on 14th March 2023 at Delhi. The Chamber is putting efforts under the dynamic Presidentship of Shri Chandrakant Salunkhe for the empowerment of MSME for the last 30 years",
-  },
-]
+  const perPage = 15
+
+  const fetchPhotos = useCallback(
+    async (signal) => {
+      try {
+        const pb = getClientPb()
+        const result = await pb.collection("Gallery_photo").getList(currentPage, perPage, {
+          sort: "created",
+            
+          signal,
+        })
+
+        if (!signal.aborted) {
+          setPhotos(result.items)
+          setTotalPages(result.totalPages)
+          setTotalItems(result.totalItems)
+        }
+      } catch (error) {
+        if (!signal.aborted) {
+          console.error("Error fetching photos:", error)
+          setPhotos([])
+        }
+      }
+    },
+    [currentPage],
+  )
+
+  const isLoading = usePocketBaseFetchWithLoading(fetchPhotos, [currentPage])
+
+  const getImageUrl = (photo, filename) => {
+    const pb = getClientPb()
+    return pb.files.getUrl(photo, filename)
+  }
 
   const openDialog = (photo) => {
     setSelectedPhoto(photo)
@@ -34,6 +51,32 @@ export default function PhotoGallery() {
 
   const closeDialog = () => {
     setSelectedPhoto(null)
+  }
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }
+
+  const goToPrevious = () => goToPage(currentPage - 1)
+  const goToNext = () => goToPage(currentPage + 1)
+
+  const getPaginationNumbers = () => {
+    const numbers = []
+    const maxVisible = 5
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+    const end = Math.min(totalPages, start + maxVisible - 1)
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1)
+    }
+
+    for (let i = start; i <= end; i++) {
+      numbers.push(i)
+    }
+    return numbers
   }
 
   return (
@@ -46,50 +89,102 @@ export default function PhotoGallery() {
           <p className="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto leading-relaxed">
             Capturing moments of excellence, innovation, and entrepreneurial spirit
           </p>
+          {totalItems > 0 && (
+            <p className="text-lg opacity-75 mt-4">
+              {totalItems} {totalItems === 1 ? "photo" : "photos"} • Page {currentPage} of {totalPages}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Photo Grid */}
       <div className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {photos.map((photo) => (
-            <div
-              key={photo.id}
-              className="group cursor-pointer bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-              onClick={() => openDialog(photo)}
-            >
-              <div className="relative overflow-hidden">
-                <img
-                  src={photo.src}
-                  alt={photo.title}
-                  className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                {/* <div className="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h3 className="font-bold text-lg mb-1">{photo.title}</h3>
-                  <p className="text-sm opacity-90 line-clamp-2">{photo.description}</p>
-                </div> */}
-              </div>
-              <div className="p-6">
-                <h3 className="font-bold text-xl text-[#29688A] mb-3 group-hover:text-[#1e4a5f] transition-colors duration-300">
-                  {photo.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed line-clamp-3">{photo.description}</p>
-                <div className="mt-4 flex items-center text-[#29688A] font-medium group-hover:text-[#1e4a5f] transition-colors duration-300">
-                  <span>View Details</span>
-                  <svg
-                    className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#29688A]"></div>
+            <span className="ml-4 text-lg text-gray-600">Loading photos...</span>
+          </div>
+        ) : photos.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-xl text-gray-600">No photos found.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {photos.map((photo) => (
+                <div
+                  key={photo.id}
+                  className="group cursor-pointer bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                  onClick={() => openDialog(photo)}
+                >
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={
+                        photo.img && photo.img.length > 0
+                          ? getImageUrl(photo, photo.img[0])
+                          : "/placeholder.svg?height=256&width=384"
+                      }
+                      alt={photo.title}
+                      className="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-xl text-[#29688A] mb-3 group-hover:text-[#1e4a5f] transition-colors duration-300">
+                      {photo.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed line-clamp-3">{photo.description}</p>
+                    <div className="mt-4 flex items-center text-[#29688A] font-medium group-hover:text-[#1e4a5f] transition-colors duration-300">
+                      <span>View Details</span>
+                      <svg
+                        className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-12 space-x-2">
+                <button
+                  onClick={goToPrevious}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  Previous
+                </button>
+
+                {getPaginationNumbers().map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => goToPage(pageNum)}
+                    className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                      currentPage === pageNum
+                        ? "bg-[#29688A] text-white"
+                        : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+
+                <button
+                  onClick={goToNext}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Dialog Modal */}
@@ -107,14 +202,21 @@ export default function PhotoGallery() {
               </button>
 
               <img
-                src={selectedPhoto.src || "/placeholder.svg"}
+                src={
+                  selectedPhoto.img && selectedPhoto.img.length > 0
+                    ? getImageUrl(selectedPhoto, selectedPhoto.img[0])
+                    : "/placeholder.svg"
+                }
                 alt={selectedPhoto.title}
-                className="w-full h-[500px] object-contain rounded-4xl rounded-t-2xl"
+                className="w-full h-[500px] object-contain rounded-t-2xl"
               />
 
               <div className="p-8">
                 <h2 className="text-3xl font-bold text-[#29688A] mb-4">{selectedPhoto.title}</h2>
                 <p className="text-gray-700 text-lg leading-relaxed">{selectedPhoto.description}</p>
+                <p className="text-sm text-gray-500 mt-4">
+                  Created: {new Date(selectedPhoto.created).toLocaleDateString()}
+                </p>
               </div>
             </div>
           </div>

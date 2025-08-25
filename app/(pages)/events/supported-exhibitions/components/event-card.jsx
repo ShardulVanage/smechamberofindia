@@ -1,19 +1,28 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { Calendar, Clock, MapPin, ExternalLink } from 'lucide-react';
+import { motion } from "framer-motion"
+import Link from "next/link"
+import { Calendar, Clock, MapPin, ExternalLink } from "lucide-react"
+import { getClientPb } from "@/lib/pocketbase"
+
+
 
 export default function EventCard({ event, index }) {
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+    const date = new Date(dateString)
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  const getBannerImageUrl = () => {
+    if (!event.bannerImageFront) return "/vibrant-event-banner.png"
+    const pb = getClientPb()
+    return pb.files.getUrl(event, event.bannerImageFront)
+  }
 
   return (
     <motion.div
@@ -26,7 +35,7 @@ export default function EventCard({ event, index }) {
       {/* Banner Image */}
       <div className="relative h-48 overflow-hidden">
         <motion.img
-          src={event.bannerImage}
+          src={getBannerImageUrl()}
           alt={event.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           whileHover={{ scale: 1.05 }}
@@ -37,7 +46,7 @@ export default function EventCard({ event, index }) {
       {/* Content */}
       <div className="p-6">
         {/* Title */}
-        <motion.h3 
+        <motion.h3
           className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-[#29688A] transition-colors duration-200"
           whileHover={{ scale: 1.02 }}
         >
@@ -45,9 +54,7 @@ export default function EventCard({ event, index }) {
         </motion.h3>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
-          {event.description}
-        </p>
+        <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">{event.description}</p>
 
         {/* Event Details */}
         <div className="space-y-2 mb-4">
@@ -67,7 +74,7 @@ export default function EventCard({ event, index }) {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <Link href={`/events/forthcoming-events/${event.id}`} className="flex-1">
+          <Link href={`/events/supported-exhibitions/${event.id}`} className="flex-1">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -76,7 +83,7 @@ export default function EventCard({ event, index }) {
               View Details
             </motion.button>
           </Link>
-          
+
           <motion.a
             href={event.registrationLink}
             target="_blank"
@@ -91,5 +98,5 @@ export default function EventCard({ event, index }) {
         </div>
       </div>
     </motion.div>
-  );
+  )
 }
