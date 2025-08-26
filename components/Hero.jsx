@@ -70,7 +70,7 @@ export default function HeroSection() {
 
         {/* Bottom Image with Gradient Overlay */}
       </section>
-        <div className="absolute bottom-0 left-0 right-0 h-[500px]   overflow-hidden   ">
+        <div className="absolute bottom-0 left-0 right-0 h-[400px]   overflow-hidden   ">
           <img 
             src="/Patriarch.png" 
             alt="Indian Parliament Building" 
@@ -78,14 +78,14 @@ export default function HeroSection() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent"></div>
         </div>
-         <div className="absolute bottom-0  right-0 h-[500px] overflow-hidden transform   ">
+         {/* <div className="absolute bottom-0  right-0 h-[500px] overflow-hidden transform   ">
           <img 
             src="/Patriarch.png" 
             alt="Indian Parliament Building" 
             className="w-fit h-full object-cover object-center  pointer-events-none select-none transform -scale-x-100"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent  "></div>
-        </div>
+        </div> */}
     </main>
   )
 }
