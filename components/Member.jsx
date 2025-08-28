@@ -47,7 +47,13 @@ export default function Members() {
     <section className="py-16 md:py-20">
       <div className="mx-auto max-w-6xl space-y-12 px-6">
         <div className="text-center space-y-4">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-foreground">Choose Your Membership Level</h2>
+       
+           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight text-center">
+           Choose Your
+            <span className="block text-[#29688A]">  Membership   Level</span>
+
+        
+          </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Join our community and unlock exclusive benefits tailored to your professional growth
           </p>

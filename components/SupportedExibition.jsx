@@ -31,9 +31,13 @@ export default function SupportedExibition() {
 
   return (
     <section className="py-16 md:py-32">
-        <h2 className="relative z-10 mx-auto max-w-3xl text-4xl font-medium lg:text-5xl text-center">
-        Exhibitions We've Proudly Supported
-        </h2>
+       
+         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight text-center">
+           
+            <span className="block text-[#29688A]">  Exhibitions</span>
+
+            We've Proudly Supported
+          </h2>
       <div className="mx-auto max-w-7xl space-y-8 px-6 md:space-y-12 pt-16 bg-[#29688A]/10 backdrop-blur-sm p-6 mt-12 rounded-4xl">
         <div className="grid gap-6 sm:grid-cols-2 md:gap-3 lg:gap-4">
           <div className="relative mb-6 sm:mb-0">
