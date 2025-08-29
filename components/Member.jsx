@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function Members() {
   // Premium member images
@@ -44,47 +45,89 @@ export default function Members() {
   }, [annualImages.length])
 
   return (
-    <section className="py-16 md:py-20">
+    <motion.section
+      className="py-16 md:py-20"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
       <div className="mx-auto max-w-6xl space-y-12 px-6">
         <div className="text-center space-y-4">
-       
-           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight text-center">
-           Choose Your
-            <span className="block text-[#29688A]">  Membership   Level</span>
+          {/* Animate heading and supporting text */}
+          <motion.h2
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight text-center"
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, ease: "easeOut", delay: 0.05 }}
+          >
+            Choose Your
+            <span className="block text-[#29688A]">Membership Level</span>
+          </motion.h2>
 
-        
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <motion.p
+            className="text-lg text-muted-foreground max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+          >
             Join our community and unlock exclusive benefits tailored to your professional growth
-          </p>
+          </motion.p>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Premium Member Section */}
-          <div className="group">
+          <motion.div
+            className="group"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
             <div className="relative mb-6">
-              <div className="bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/20 dark:to-amber-800/10 aspect-[4/1]  relative rounded-2xl p-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <motion.div
+                className="bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/20 dark:to-amber-800/10 aspect-[4/1] relative rounded-2xl p-1 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                whileHover={{ y: -4 }}
+                transition={{ type: "spring", stiffness: 250, damping: 20 }}
+              >
                 <div className="relative w-full h-full rounded-xl overflow-hidden bg-white dark:bg-gray-900">
-                  <Image
-                    src={premiumImages[premiumImageIndex] || "/placeholder.svg"}
-                    className="object-contain transition-opacity duration-500 p-4"
-                    alt="Premium member benefits"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={premiumImages[premiumImageIndex] || "premium-fallback"}
+                      className="absolute inset-0"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
+                      <Image
+                        src={premiumImages[premiumImageIndex] || "/placeholder.svg"}
+                        className="object-contain p-4"
+                        alt="Premium member benefits"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+
                   {/* Image indicator dots */}
                   <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
                     {premiumImages.map((_, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          index === premiumImageIndex ? "bg-amber-600 scale-110" : "bg-gray-400 hover:bg-gray-500"
-                        }`}
+                        className={`w-2 h-2 rounded-full ${index === premiumImageIndex ? "bg-amber-600" : "bg-gray-400"}`}
+                        animate={{
+                          scale: index === premiumImageIndex ? 1.1 : 1,
+                          opacity: index === premiumImageIndex ? 1 : 0.75,
+                        }}
+                        transition={{ duration: 0.2 }}
                       />
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             <div className="space-y-6">
@@ -121,33 +164,58 @@ export default function Members() {
                 </ul>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Annual Member Section */}
-          <div className="group">
+          <motion.div
+            className="group"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45, ease: "easeOut", delay: 0.05 }}
+          >
             <div className="relative mb-6">
-              <div className="bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/20 dark:to-blue-800/10 aspect-[4/1] relative rounded-2xl p-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <motion.div
+                className="bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/20 dark:to-blue-800/10 aspect-[4/1] relative rounded-2xl p-1 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                whileHover={{ y: -4 }}
+                transition={{ type: "spring", stiffness: 250, damping: 20 }}
+              >
                 <div className="relative w-full h-full rounded-xl overflow-hidden bg-white dark:bg-gray-900">
-                  <Image
-                    src={annualImages[annualImageIndex] || "/placeholder.svg"}
-                    className="object-contain transition-opacity duration-500 p-4"
-                    alt="Annual member benefits"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={annualImages[annualImageIndex] || "annual-fallback"}
+                      className="absolute inset-0"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
+                      <Image
+                        src={annualImages[annualImageIndex] || "/placeholder.svg"}
+                        className="object-contain p-4"
+                        alt="Annual member benefits"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+
                   {/* Image indicator dots */}
                   <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
                     {annualImages.map((_, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          index === annualImageIndex ? "bg-blue-600 scale-110" : "bg-gray-400 hover:bg-gray-500"
-                        }`}
+                        className={`w-2 h-2 rounded-full ${index === annualImageIndex ? "bg-blue-600" : "bg-gray-400"}`}
+                        animate={{
+                          scale: index === annualImageIndex ? 1.1 : 1,
+                          opacity: index === annualImageIndex ? 1 : 0.75,
+                        }}
+                        transition={{ duration: 0.2 }}
                       />
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             <div className="space-y-6">
@@ -184,9 +252,9 @@ export default function Members() {
                 </ul>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   )
 }
