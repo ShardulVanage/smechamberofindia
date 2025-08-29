@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import { Phone, Mail, Send, CheckCircle } from "lucide-react"
+import { Phone, Mail, Send, CheckCircle, Loader2, Clock } from "lucide-react"
 
 export default function EnquiryForStallBooking() {
   const [formData, setFormData] = useState({
@@ -15,6 +15,105 @@ export default function EnquiryForStallBooking() {
     message: "",
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [showOtpStep, setShowOtpStep] = useState(false)
+  const [otp, setOtp] = useState("")
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
+  const [isResendingOtp, setIsResendingOtp] = useState(false)
+  const [canResendOtp, setCanResendOtp] = useState(false)
+  const [resendTimer, setResendTimer] = useState(60)
+  const [otpExpireTimer, setOtpExpireTimer] = useState(180)
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false)
+  const recaptchaRef = useRef(null)
+  const recaptchaWidgetId = useRef(null)
+
+  useEffect(() => {
+    const loadRecaptcha = () => {
+      if ((window ).grecaptcha) {
+        setRecaptchaLoaded(true)
+        return
+      }
+      const script = document.createElement("script")
+      script.src = "https://www.google.com/recaptcha/api.js"
+      script.async = true
+      script.defer = true
+      script.onload = () => setRecaptchaLoaded(true)
+      document.head.appendChild(script)
+    }
+    loadRecaptcha()
+  }, [])
+
+  useEffect(() => {
+    const grecaptcha = (window ).grecaptcha
+    if (!showOtpStep && recaptchaLoaded && grecaptcha && recaptchaRef.current) {
+      if (recaptchaWidgetId.current !== null) {
+        try {
+          grecaptcha.reset(recaptchaWidgetId.current)
+        } catch {}
+      }
+      setTimeout(() => {
+        try {
+          if (recaptchaRef.current && recaptchaRef.current.innerHTML === "") {
+            recaptchaWidgetId.current = grecaptcha.render(recaptchaRef.current, {
+              sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
+            })
+          }
+        } catch {
+          if (recaptchaRef.current) {
+            recaptchaRef.current.innerHTML = ""
+            recaptchaWidgetId.current = grecaptcha.render(recaptchaRef.current, {
+              sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
+            })
+          }
+        }
+      }, 100)
+    }
+
+    return () => {
+      const grecaptcha = (window).grecaptcha
+      if (recaptchaWidgetId.current !== null && grecaptcha) {
+        try {
+          grecaptcha.reset(recaptchaWidgetId.current)
+        } catch {}
+      }
+    }
+  }, [showOtpStep, recaptchaLoaded])
+
+  useEffect(() => {
+    let resendInterval
+    let expireInterval
+
+    if (showOtpStep && !canResendOtp && resendTimer > 0) {
+      resendInterval = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
+            setCanResendOtp(true)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+
+    if (showOtpStep && otpExpireTimer > 0) {
+      expireInterval = setInterval(() => {
+        setOtpExpireTimer((prev) => {
+          if (prev <= 1) {
+            setError("OTP has expired. Please request a new one.")
+            setCanResendOtp(true)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+
+    return () => {
+      if (resendInterval) clearInterval(resendInterval)
+      if (expireInterval) clearInterval(expireInterval)
+    }
+  }, [showOtpStep, canResendOtp, resendTimer, otpExpireTimer])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -24,25 +123,162 @@ export default function EnquiryForStallBooking() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Here you would typically send the data to your backend/PocketBase
-    console.log("Form submitted:", formData)
-    setIsSubmitted(true)
+    setError("")
 
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false)
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        company: "",
-        stallSize: "",
-        exhibition: "",
-        message: "",
+    if (!formData.name?.trim() || !formData.email?.trim() || !formData.phone?.trim()) {
+      setError("Name, Email, and Phone are required.")
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError("Please enter a valid email address.")
+      return
+    }
+    const mobileDigits = (formData.phone || "").replace(/\D/g, "")
+    if (mobileDigits.length < 10) {
+      setError("Please enter a valid 10-digit mobile number.")
+      return
+    }
+
+    const grecaptcha = (window ).grecaptcha
+    let recaptchaToken = null
+    if (recaptchaLoaded && grecaptcha) {
+      recaptchaToken =
+        recaptchaWidgetId.current !== null
+          ? grecaptcha.getResponse(recaptchaWidgetId.current)
+          : grecaptcha.getResponse()
+      if (!recaptchaToken) {
+        setError("Please complete the reCAPTCHA verification.")
+        return
+      }
+    }
+
+    setIsLoading(true)
+    try {
+      const res = await fetch("/api/enquiry/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          mobile: mobileDigits,
+          recaptchaToken,
+        }),
       })
-    }, 3000)
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to send OTP. Please try again.")
+      }
+
+      setShowOtpStep(true)
+      setResendTimer(60)
+      setOtpExpireTimer(180)
+      setCanResendOtp(false)
+      setOtp("")
+    } catch (err) {
+      setError(err?.message || "Failed to send OTP. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleOtpVerification = async (e) => {
+    e.preventDefault()
+    setError("")
+
+    if (!otp.trim() || otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP.")
+      return
+    }
+
+    setIsVerifyingOtp(true)
+    try {
+      const res = await fetch("/api/enquiry/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          otp,
+          formData: {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            company: formData.company,
+            stallSize: formData.stallSize,
+            exhibition: formData.exhibition,
+            message: formData.message,
+          },
+        }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Invalid OTP. Please try again.")
+      }
+
+      setIsSubmitted(true)
+      setShowOtpStep(false)
+      setOtp("")
+      const grecaptcha = (window).grecaptcha
+      if (recaptchaLoaded && grecaptcha && recaptchaWidgetId.current !== null) {
+        try {
+          grecaptcha.reset(recaptchaWidgetId.current)
+        } catch {}
+      }
+
+      setTimeout(() => {
+        setIsSubmitted(false)
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          company: "",
+          stallSize: "",
+          exhibition: "",
+          message: "",
+        })
+      }, 3000)
+    } catch (err) {
+      setError(err?.message || "Failed to verify OTP. Please try again.")
+    } finally {
+      setIsVerifyingOtp(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    setError("")
+    setIsResendingOtp(true)
+    try {
+      const res = await fetch("/api/enquiry/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          mobile: (formData.phone || "").replace(/\D/g, ""),
+          isResend: true,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to resend OTP. Please try again.")
+      }
+      setResendTimer(60)
+      setOtpExpireTimer(180)
+      setCanResendOtp(false)
+      setOtp("")
+    } catch (err) {
+      setError(err?.message || "Failed to resend OTP. Please try again.")
+    } finally {
+      setIsResendingOtp(false)
+    }
+  }
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
   const containerVariants = {
@@ -67,7 +303,6 @@ export default function EnquiryForStallBooking() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
       <motion.div
         className="bg-gradient-to-r from-[#29688A] to-[#1e4a5f] text-white py-16"
         initial={{ opacity: 0, y: -50 }}
@@ -88,7 +323,6 @@ export default function EnquiryForStallBooking() {
         animate="visible"
       >
         <div className="grid lg:grid-cols-2 gap-12">
-          {/* Contact Information */}
           <motion.div variants={itemVariants} className="space-y-8">
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-[#29688A] mb-6">Contact Information</h2>
@@ -147,7 +381,6 @@ export default function EnquiryForStallBooking() {
             </div>
           </motion.div>
 
-          {/* Enquiry Form */}
           <motion.div variants={itemVariants}>
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-[#29688A] mb-6">Send Your Enquiry</h2>
@@ -165,7 +398,7 @@ export default function EnquiryForStallBooking() {
                     Your enquiry has been submitted successfully. We'll get back to you soon.
                   </p>
                 </motion.div>
-              ) : (
+              ) : !showOtpStep ? (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
@@ -216,6 +449,7 @@ export default function EnquiryForStallBooking() {
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200"
                         placeholder="Enter your company name"
+                        required
                       />
                     </div>
                   </div>
@@ -227,6 +461,7 @@ export default function EnquiryForStallBooking() {
                         name="stallSize"
                         value={formData.stallSize}
                         onChange={handleInputChange}
+                        required
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200"
                       >
                         <option value="">Select stall size</option>
@@ -246,6 +481,7 @@ export default function EnquiryForStallBooking() {
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200"
                         placeholder="Which exhibition are you interested in?"
+                        required
                       />
                     </div>
                   </div>
@@ -259,19 +495,117 @@ export default function EnquiryForStallBooking() {
                       rows={4}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200"
                       placeholder="Tell us more about your requirements..."
+                      required
                     />
                   </div>
 
+                  {recaptchaLoaded && (
+                    <div className="flex justify-center">
+                      <div ref={recaptchaRef}></div>
+                    </div>
+                  )}
+
+                  {error ? (
+                    <p className="text-red-600 text-sm" role="alert">
+                      {error}
+                    </p>
+                  ) : null}
+
                   <motion.button
                     type="submit"
-                    className="w-full bg-[#29688A] text-white py-4 px-6 rounded-lg font-semibold text-lg flex items-center justify-center space-x-2 hover:bg-[#1e4a5f] transition-all duration-200"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-[#29688A] text-white py-4 px-6 rounded-lg font-semibold text-lg flex items-center justify-center space-x-2 hover:bg-[#1e4a5f] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                    whileHover={{ scale: isLoading ? 1 : 1.02 }}
+                    whileTap={{ scale: isLoading ? 1 : 0.98 }}
+                    disabled={isLoading}
                   >
-                    <Send className="w-5 h-5" />
-                    <span>Send Enquiry</span>
+                    {isLoading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5" />}
+                    <span>{isLoading ? "Sending OTP..." : "Send OTP"}</span>
                   </motion.button>
                 </form>
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="text-lg font-semibold text-[#29688A] mb-2">OTP Verification</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      We've sent a 6-digit OTP to your email ({formData.email})
+                    </p>
+                    <div className="flex items-center justify-center gap-4 text-sm">
+                      <div className="flex items-center gap-1 text-orange-600">
+                        <Clock className="w-4 h-4" />
+                        <span>Expires in: {formatTime(otpExpireTimer)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleOtpVerification} className="space-y-4">
+                    <div>
+                      <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
+                        Enter 6-digit OTP *
+                      </label>
+                      <input
+                        id="otp"
+                        placeholder="Enter OTP"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200 text-center text-lg tracking-widest"
+                        maxLength={6}
+                      />
+                    </div>
+
+                    {error ? (
+                      <p className="text-red-600 text-sm" role="alert">
+                        {error}
+                      </p>
+                    ) : null}
+
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        className="flex-1 bg-[#29688A] hover:bg-[#1e4a5f] text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                        disabled={isVerifyingOtp || otpExpireTimer === 0}
+                      >
+                        {isVerifyingOtp ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...
+                          </>
+                        ) : (
+                          "Verify & Submit"
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={!canResendOtp || isResendingOtp}
+                        className="px-6 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition disabled:opacity-60"
+                      >
+                        {isResendingOtp ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : canResendOtp ? (
+                          "Resend OTP"
+                        ) : (
+                          `Resend in ${resendTimer}s`
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOtpStep(false)
+                      setOtp("")
+                      setError("")
+                      if (recaptchaRef.current) {
+                        recaptchaRef.current.innerHTML = ""
+                        recaptchaWidgetId.current = null
+                      }
+                    }}
+                    className="w-full text-gray-600 hover:text-gray-800 text-sm"
+                  >
+                    ← Back to Form
+                  </button>
+                </div>
               )}
             </div>
           </motion.div>

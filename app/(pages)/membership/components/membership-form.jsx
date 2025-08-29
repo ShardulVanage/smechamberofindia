@@ -136,7 +136,7 @@ export default function MembershipForm({ membershipType }) {
           // Check if the container is empty before rendering
           if (recaptchaRef.current && recaptchaRef.current.innerHTML === "") {
             recaptchaWidgetId.current = window.grecaptcha.render(recaptchaRef.current, {
-              sitekey: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",
+              sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
             })
           }
         } catch (error) {
@@ -145,7 +145,7 @@ export default function MembershipForm({ membershipType }) {
           if (recaptchaRef.current) {
             recaptchaRef.current.innerHTML = ""
             recaptchaWidgetId.current = window.grecaptcha.render(recaptchaRef.current, {
-              sitekey: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",
+              sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
             })
           }
         }
