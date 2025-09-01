@@ -146,7 +146,7 @@ export async function POST(request) {
     })
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Email sending timeout")), 10000),
+      setTimeout(() => reject(new Error("Email sending timeout")), 60000),
     )
 
     await Promise.race([emailPromise, timeoutPromise])

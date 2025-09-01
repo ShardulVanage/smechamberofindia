@@ -324,7 +324,7 @@ export default function About() {
               transition={{ delay: 1.2, duration: 0.6 }}
             >
               <motion.a 
-                href="#" 
+                href="/about" 
                 className="text-base font-semibold leading-7 text-[#29688A] group inline-flex items-center"
                 whileHover={{ x: 5 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}

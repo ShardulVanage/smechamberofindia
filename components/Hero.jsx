@@ -126,7 +126,7 @@ function Hero() {
 
   return (
     <motion.section 
-      className="relative min-h-screen bg-gradient-to-tr from-white via-white to-[#29688A] overflow-hidden"
+      className="relative min-h-screen bg-gradient-to-tr from-white via-white to- overflow-hidden"
       initial="hidden"
       animate="visible"
       variants={containerVariants}

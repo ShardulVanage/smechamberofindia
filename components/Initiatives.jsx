@@ -1,82 +1,131 @@
+'use client'
 import { InfiniteSlider } from "@/components/motion-primitives/infinite-slider"
 import { ProgressiveBlur } from "@/components/motion-primitives/progressive-blur"
+import { useState, useEffect } from 'react';
+
+// Custom hook for responsive gap
+const useResponsiveGap = () => {
+  const [gap, setGap] = useState(112);
+
+  useEffect(() => {
+    const updateGap = () => {
+      if (window.innerWidth < 640) {
+        setGap(60); // Mobile
+      } else if (window.innerWidth < 1024) {
+        setGap(80); // Tablet
+      } else {
+        setGap(112); // Desktop
+      }
+    };
+
+    updateGap();
+    window.addEventListener('resize', updateGap);
+    return () => window.removeEventListener('resize', updateGap);
+  }, []);
+
+  return gap;
+};
 
 export const Initiatives = () => {
+  const responsiveGap = useResponsiveGap();
+
   return (
-    <section className="bg-background py-4 md:py-4">
-      <div className="group relative m-auto max-w-7xl px-6">
-        <div className="flex flex-col items-center md:flex-row">
-          <div className="inline md:max-w-44 md:border-r md:pr-6">
-            <p className="text-end text-2xl font-bold text-primary">Initiatives</p>
+    <section className="bg-background py-8 sm:py-12 md:py-16 lg:py-20">
+      <div className="group relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center space-y-6 md:flex-row md:space-y-0">
+          {/* Title Section */}
+          <div className="w-full text-center md:w-auto md:max-w-44 md:border-r md:pr-6 md:text-right">
+            <p className="text-xl font-bold text-[#29688A]/90 sm:text-2xl lg:text-3xl">
+              Initiatives
+            </p>
           </div>
-          <div className="relative py-6 md:w-[calc(100%-11rem)]">
-            <InfiniteSlider speedOnHover={20} speed={40} gap={112}>
-              <div className="flex">
+          
+          {/* Slider Section */}
+          <div className="relative w-full py-6 md:w-[calc(100%-11rem)] md:py-8">
+            <InfiniteSlider 
+              speedOnHover={20} 
+              speed={40} 
+              gap={responsiveGap}
+            >
+              {/* Initiative Logo 1 */}
+              <div className="flex shrink-0">
                 <img
-                  className="mx-auto h-20 w-fit dark:invert opacity-60 hover:opacity-100 transition-opacity"
+                  className="mx-auto h-12 w-fit object-contain opacity-60 transition-opacity duration-300 hover:opacity-100 dark:invert sm:h-16 md:h-20"
                   src="/assets/strategic-partners/Bhumi-World.jpg"
-                  alt="FICCI Logo"
-                  height="56"
-                  width="120"
+                  alt="Bhumi World Initiative Logo"
+                  height="80"
+                  width="auto"
                 />
               </div>
-              <div className="flex">
+              
+              {/* Initiative Logo 2 */}
+              <div className="flex shrink-0">
                 <img
-                  className="mx-auto h-20 w-fit dark:invert opacity-60 hover:opacity-100 transition-opacity"
+                  className="mx-auto h-12 w-fit object-contain opacity-60 transition-opacity duration-300 hover:opacity-100 dark:invert sm:h-16 md:h-20"
                   src="/assets/strategic-partners/comano.jpg"
-                  alt="CII Logo"
-                  height="56"
-                  width="120"
+                  alt="Comano Initiative Logo"
+                  height="80"
+                  width="auto"
                 />
               </div>
-              <div className="flex">
+              
+              {/* Initiative Logo 3 */}
+              <div className="flex shrink-0">
                 <img
-                  className="mx-auto h-20 w-fit dark:invert opacity-60 hover:opacity-100 transition-opacity"
+                  className="mx-auto h-12 w-fit object-contain opacity-60 transition-opacity duration-300 hover:opacity-100 dark:invert sm:h-16 md:h-20"
                   src="/assets/strategic-partners/InstaPe.jpg"
-                  alt="ASSOCHAM Logo"
-                  height="56"
-                  width="120"
+                  alt="InstaPe Initiative Logo"
+                  height="80"
+                  width="auto"
                 />
               </div>
-              <div className="flex">
+              
+              {/* Initiative Logo 4 */}
+              <div className="flex shrink-0">
                 <img
-                  className="mx-auto h-20 w-fit dark:invert opacity-60 hover:opacity-100 transition-opacity"
+                  className="mx-auto h-12 w-fit object-contain opacity-60 transition-opacity duration-300 hover:opacity-100 dark:invert sm:h-16 md:h-20"
                   src="/assets/strategic-partners/LoanExpress.jpg"
-                  alt="EXIM Bank Logo"
-                  height="56"
-                  width="120"
+                  alt="Loan Express Initiative Logo"
+                  height="80"
+                  width="auto"
                 />
               </div>
-              <div className="flex">
+              
+              {/* Initiative Logo 5 */}
+              <div className="flex shrink-0">
                 <img
-                  className="mx-auto h-20 w-fit dark:invert opacity-60 hover:opacity-100 transition-opacity"
+                  className="mx-auto h-12 w-fit object-contain opacity-60 transition-opacity duration-300 hover:opacity-100 dark:invert sm:h-16 md:h-20"
                   src="/assets/strategic-partners/MK.jpg"
-                  alt="SIDBI Logo"
-                  height="56"
-                  width="120"
+                  alt="MK Initiative Logo"
+                  height="80"
+                  width="auto"
                 />
               </div>
-              <div className="flex">
+              
+              {/* Initiative Logo 6 */}
+              <div className="flex shrink-0">
                 <img
-                  className="mx-auto h-20 w-fit dark:invert opacity-60 hover:opacity-100 transition-opacity"
-                  src="assets/strategic-partners/sats.jpg"
-                  alt="MSME Ministry Logo"
-                  height="56"
-                  width="120"
+                  className="mx-auto h-12 w-fit object-contain opacity-60 transition-opacity duration-300 hover:opacity-100 dark:invert sm:h-16 md:h-20"
+                  src="/assets/strategic-partners/sats.jpg"
+                  alt="SATS Initiative Logo"
+                  height="80"
+                  width="auto"
                 />
               </div>
-            
             </InfiniteSlider>
 
-            <div className="bg-gradient-to-r from-background absolute inset-y-0 left-0 w-20"></div>
-            <div className="bg-gradient-to-l from-background absolute inset-y-0 right-0 w-20"></div>
+            {/* Gradient Overlays - Responsive */}
+            <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background sm:w-12 md:w-16 lg:w-20"></div>
+            <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background sm:w-12 md:w-16 lg:w-20"></div>
+            
+            {/* Progressive Blur - Responsive */}
             <ProgressiveBlur
-              className="pointer-events-none absolute left-0 top-0 h-full w-20"
+              className="pointer-events-none absolute left-0 top-0 h-full w-8 sm:w-12 md:w-16 lg:w-20"
               direction="left"
               blurIntensity={1}
             />
             <ProgressiveBlur
-              className="pointer-events-none absolute right-0 top-0 h-full w-20"
+              className="pointer-events-none absolute right-0 top-0 h-full w-8 sm:w-12 md:w-16 lg:w-20"
               direction="right"
               blurIntensity={1}
             />

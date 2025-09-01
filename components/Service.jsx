@@ -169,7 +169,7 @@ const iconVariants = {
 }
 
 export default function ServicesSection() {
-  const serviceCards = products.slice(0, 6).map((product, index) => ({
+  const serviceCards = products.slice(0, 5).map((product, index) => ({
     icon: iconMap[product.id],
     title: product.title,
     description: product.subtitle,
