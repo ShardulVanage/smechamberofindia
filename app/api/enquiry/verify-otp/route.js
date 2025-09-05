@@ -1,3 +1,4 @@
+//verfiy otp
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
 
@@ -20,7 +21,7 @@ function getClientIP(request) {
 
 export async function POST(request) {
   try {
-    const { email, otp, formData } = await request.json()
+    const { email, phone, emailOtp, smsOtp, formData } = await request.json()
 
     const normalizedEmail = normalizeEmail(email)
     const normalizedFormEmail = normalizeEmail(formData?.email)
@@ -35,7 +36,14 @@ export async function POST(request) {
       return NextResponse.json({ error: "OTP not found or expired" }, { status: 400 })
     }
 
-    const { otp: storedOtp, expiresAt, clientIP: storedIP } = storedOtpData
+     const {
+      emailOtp: storedEmailOtp,
+      smsOtp: storedSmsOtp,
+      expiresAt,
+      clientIP: storedIP,
+      phone: storedPhone,
+    } = storedOtpData
+
     const now = Date.now()
 
     if (storedIP !== clientIP) {
@@ -48,10 +56,17 @@ export async function POST(request) {
       return NextResponse.json({ error: "OTP has expired" }, { status: 400 })
     }
 
-    if (otp !== storedOtp) {
-      return NextResponse.json({ error: "Invalid OTP" }, { status: 400 })
+    if (phone !== storedPhone) {
+      return NextResponse.json({ error: "Phone number validation failed" }, { status: 400 })
     }
 
+    if (emailOtp !== storedEmailOtp) {
+      return NextResponse.json({ error: "Invalid email OTP" }, { status: 400 })
+    }
+
+    if (smsOtp !== storedSmsOtp) {
+      return NextResponse.json({ error: "Invalid SMS OTP" }, { status: 400 })
+    }
     // OTP verified
     otpStorage.delete(normalizedEmail)
     const data = { ...(formData || {}), email: normalizedEmail }

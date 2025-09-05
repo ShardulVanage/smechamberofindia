@@ -1,8 +1,8 @@
 "use client"
-
-import useSWR from "swr"
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
+import "react-phone-number-input/style.css"
+import PhoneInput from "react-phone-number-input"
 
 // Dynamically import react-google-recaptcha to avoid SSR issues
 const ReCAPTCHA = dynamic(() => import("react-google-recaptcha"), { ssr: false })
@@ -27,7 +27,8 @@ export default function StrategicPartnersPage() {
 
   const [step, setStep] = useState("form")
   const [recaptchaToken, setRecaptchaToken] = useState(null)
-  const [otp, setOtp] = useState("")
+  const [emailOtp, setEmailOtp] = useState("")
+  const [smsOtp, setSmsOtp] = useState("")
   const [otpExpiresIn, setOtpExpiresIn] = useState(0)
   const [resendCooldown, setResendCooldown] = useState(0)
   const [verificationToken, setVerificationToken] = useState(null)
@@ -56,6 +57,14 @@ export default function StrategicPartnersPage() {
     // Clear validation error for this field when user starts typing
     if (validationErrors[e.target.name]) {
       setValidationErrors((prev) => ({ ...prev, [e.target.name]: "" }))
+    }
+  }
+
+  function handlePhoneChange(value) {
+    setFormData((prev) => ({ ...prev, contactDetail: value || "" }))
+    // Clear validation error for phone field when user starts typing
+    if (validationErrors.contactDetail) {
+      setValidationErrors((prev) => ({ ...prev, contactDetail: "" }))
     }
   }
 
@@ -96,9 +105,8 @@ export default function StrategicPartnersPage() {
 
     // Phone validation (basic check for numbers)
     if (formData.contactDetail && formData.contactDetail.trim() !== "") {
-      const phoneRegex = /^[+]?[\d\s\-\(\)]{10,}$/
-      if (!phoneRegex.test(formData.contactDetail.trim())) {
-        errors.contactDetail = "Please enter a valid contact number"
+      if (formData.contactDetail.length < 10) {
+        errors.contactDetail = "Please enter a valid phone number"
       }
     }
 
@@ -121,7 +129,7 @@ export default function StrategicPartnersPage() {
   async function handleSendOtp(isResend = false) {
     try {
       setError(null)
-      
+
       // Validate form only for initial submission, not resend
       if (!isResend) {
         const errors = validateForm()
@@ -157,7 +165,8 @@ export default function StrategicPartnersPage() {
         throw new Error(data?.error || "Failed to send OTP")
       }
 
-      setOtp("")
+      setEmailOtp("")
+      setSmsOtp("")
       setStep("otp")
       setOtpExpiresIn(data?.expiresIn ?? 180)
       setResendCooldown(30)
@@ -183,7 +192,8 @@ export default function StrategicPartnersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: normalizeEmail(formData.email),
-          otp,
+          emailOtp,
+          smsOtp,
         }),
       })
 
@@ -238,7 +248,7 @@ export default function StrategicPartnersPage() {
         </div>
       </div>
 
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-12">
             <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 border border-gray-100">
@@ -364,9 +374,7 @@ export default function StrategicPartnersPage() {
                             : "border-gray-200 focus:border-[#29688A]"
                         }`}
                       />
-                      {validationErrors.name && (
-                        <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
-                      )}
+                      {validationErrors.name && <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
@@ -519,17 +527,21 @@ export default function StrategicPartnersPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Detail *</label>
-                      <input
-                        type="tel"
-                        name="contactDetail"
-                        required
+                      <PhoneInput
+                        international
+                        countryCallingCodeEditable={false}
+                        defaultCountry="IN"
                         value={formData.contactDetail}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#29688A]/10 ${
+                        onChange={handlePhoneChange}
+                        className={`phone-input ${
                           validationErrors.contactDetail
                             ? "border-red-300 focus:border-red-500"
                             : "border-gray-200 focus:border-[#29688A]"
                         }`}
+                        style={{
+                          "--PhoneInputCountryFlag-height": "1em",
+                          "--PhoneInputCountrySelectArrow-color": "#6b7280",
+                        }}
                       />
                       {validationErrors.contactDetail && (
                         <p className="mt-1 text-sm text-red-600">{validationErrors.contactDetail}</p>
@@ -549,9 +561,7 @@ export default function StrategicPartnersPage() {
                             : "border-gray-200 focus:border-[#29688A]"
                         }`}
                       />
-                      {validationErrors.email && (
-                        <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>
-                      )}
+                      {validationErrors.email && <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Address *</label>
@@ -576,16 +586,10 @@ export default function StrategicPartnersPage() {
 
                   {siteKey ? (
                     <div className="mt-2">
-                      <ReCAPTCHA
-                        ref={recaptchaRef}
-                        sitekey={siteKey}
-                        onChange={(token) => setRecaptchaToken(token)}
-                      />
+                      <ReCAPTCHA ref={recaptchaRef} sitekey={siteKey} onChange={(token) => setRecaptchaToken(token)} />
                     </div>
                   ) : (
-                    <p className="text-sm text-amber-600">
-                      Missing reCAPTCHA site key.
-                    </p>
+                    <p className="text-sm text-amber-600">Missing reCAPTCHA site key.</p>
                   )}
 
                   <button
@@ -607,18 +611,42 @@ export default function StrategicPartnersPage() {
                     handleVerifyOtp()
                   }}
                 >
-                  <p className="text-gray-700">
-                    We sent a 6-digit verification code to: <span className="font-semibold">{formData.email}</span>
-                  </p>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    inputMode="numeric"
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 tracking-widest text-center"
-                  />
+                  <p className="text-gray-700 text-sm">We sent verification codes to:</p>
+                  <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                    <p>
+                      <strong>Email:</strong> {formData.email}
+                    </p>
+                    <p>
+                      <strong>SMS:</strong> {formData.contactDetail}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email OTP *</label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      inputMode="numeric"
+                      placeholder="Enter 6-digit Email OTP"
+                      value={emailOtp}
+                      onChange={(e) => setEmailOtp(e.target.value.replace(/[^0-9]/g, ""))}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 tracking-widest text-center"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">SMS OTP *</label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      inputMode="numeric"
+                      placeholder="Enter 6-digit SMS OTP"
+                      value={smsOtp}
+                      onChange={(e) => setSmsOtp(e.target.value.replace(/[^0-9]/g, ""))}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 tracking-widest text-center"
+                    />
+                  </div>
+
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>Expires in: {otpExpiresIn}s</span>
                     <button
@@ -631,19 +659,9 @@ export default function StrategicPartnersPage() {
                     </button>
                   </div>
 
-                  {siteKey ? (
-                    <div className="mt-2">
-                      <ReCAPTCHA
-                        ref={recaptchaRef}
-                        sitekey={siteKey}
-                        onChange={(token) => setRecaptchaToken(token)}
-                      />
-                    </div>
-                  ) : null}
-
                   <button
                     type="submit"
-                    disabled={loading || otp.length !== 6}
+                    disabled={loading || emailOtp.length !== 6 || smsOtp.length !== 6}
                     className="w-full bg-gradient-to-r from-[#29688A] to-[#1e4a63] text-white py-3 px-6 rounded-xl hover:from-[#1e4a63] hover:to-[#29688A] transition-all font-semibold shadow-lg disabled:opacity-50"
                   >
                     {loading ? "Verifying..." : "Verify & Submit"}
@@ -691,6 +709,34 @@ export default function StrategicPartnersPage() {
         }
         .animate-fade-in {
           animation: fade-in 0.8s ease-out;
+        }
+        :global(.phone-input .PhoneInputInput) {
+          width: 100%;
+          padding: 12px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          outline: none;
+          transition: all 0.2s;
+          font-size: 16px;
+        }
+        :global(.phone-input .PhoneInputInput:focus) {
+          border-color: #29688A;
+          box-shadow: 0 0 0 4px rgba(41, 104, 138, 0.1);
+        }
+        :global(.phone-input.border-red-300 .PhoneInputInput) {
+          border-color: #fca5a5;
+        }
+        :global(.phone-input.border-red-300 .PhoneInputInput:focus) {
+          border-color: #ef4444;
+        }
+        :global(.phone-input .PhoneInputCountrySelect) {
+          border: none;
+          background: transparent;
+          margin-right: 8px;
+        }
+        :global(.phone-input .PhoneInputCountrySelectArrow) {
+          border-top-color: #6b7280;
+          opacity: 0.8;
         }
       `}</style>
     </div>

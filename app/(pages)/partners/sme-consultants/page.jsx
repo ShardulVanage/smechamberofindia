@@ -1,5 +1,12 @@
 "use client"
-import { useState } from "react"
+
+import dynamic from "next/dynamic"
+import { useEffect, useRef, useState } from "react"
+import "react-phone-number-input/style.css"
+import PhoneInput from "react-phone-number-input"
+
+// Dynamically import react-google-recaptcha to avoid SSR issues
+const ReCAPTCHA = dynamic(() => import("react-google-recaptcha"), { ssr: false })
 
 export default function SMEConsultantPage() {
   const [formData, setFormData] = useState({
@@ -47,28 +54,210 @@ export default function SMEConsultantPage() {
     "Printing & publishing",
   ]
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+  const [step, setStep] = useState("form")
+  const [recaptchaToken, setRecaptchaToken] = useState(null)
+  const [emailOtp, setEmailOtp] = useState("")
+  const [smsOtp, setSmsOtp] = useState("")
+  const [otpExpiresIn, setOtpExpiresIn] = useState(0)
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [verificationToken, setVerificationToken] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [validationErrors, setValidationErrors] = useState({})
+
+  const recaptchaRef = useRef(null)
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+
+  useEffect(() => {
+    if (otpExpiresIn <= 0) return
+    const t = setInterval(() => setOtpExpiresIn((s) => (s > 0 ? s - 1 : 0)), 1000)
+    return () => clearInterval(t)
+  }, [otpExpiresIn])
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const t = setInterval(() => setResendCooldown((s) => (s > 0 ? s - 1 : 0)), 1000)
+    return () => clearInterval(t)
+  }, [resendCooldown])
+
+  function handleInputChange(e) {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    if (validationErrors[e.target.name]) {
+      setValidationErrors((prev) => ({ ...prev, [e.target.name]: "" }))
+    }
   }
 
-  const handleSpecializationChange = (area) => {
-    const updatedSpecialization = formData.specialization.includes(area)
-      ? formData.specialization.filter((item) => item !== area)
+  function handlePhoneChange(value) {
+    setFormData((prev) => ({ ...prev, phone: value || "" }))
+    if (validationErrors.phone) {
+      setValidationErrors((prev) => ({ ...prev, phone: "" }))
+    }
+  }
+
+  function handleSpecializationChange(area) {
+    const updated = formData.specialization.includes(area)
+      ? formData.specialization.filter((a) => a !== area)
       : [...formData.specialization, area]
-
-    setFormData({
-      ...formData,
-      specialization: updatedSpecialization,
-    })
+    setFormData((prev) => ({ ...prev, specialization: updated }))
+    if (validationErrors.specialization) {
+      setValidationErrors((prev) => ({ ...prev, specialization: "" }))
+    }
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log("SME Consultant Application:", formData)
-    alert("Thank you for your interest! We will contact you soon.")
+  function normalizeEmail(email) {
+    return email.toLowerCase().trim()
+  }
+
+  function validateForm() {
+    const errors = {}
+    const requiredFields = [
+      { key: "consultantName", label: "Consultant Name" },
+      { key: "email", label: "Email" },
+      { key: "phone", label: "Phone" },
+      { key: "experience", label: "Years of Experience" },
+      { key: "qualifications", label: "Qualifications" },
+      { key: "services", label: "Services Offered" },
+    ]
+
+    requiredFields.forEach(({ key, label }) => {
+      const value = formData[key]
+      if (!value || (typeof value === "string" && value.trim() === "")) {
+        errors[key] = `${label} is required`
+      }
+    })
+
+    if (formData.specialization.length === 0) {
+      errors.specialization = "Select at least one specialization"
+    }
+
+    if (formData.email && formData.email.trim() !== "") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email.trim())) {
+        errors.email = "Please enter a valid email address"
+      }
+    }
+
+    if (formData.phone && formData.phone.trim() !== "") {
+      if (!formData.phone.startsWith("+") || formData.phone.length < 10) {
+        errors.phone = "Please enter a valid phone number with country code"
+      }
+    }
+
+    return errors
+  }
+
+  async function executeRecaptcha() {
+    try {
+      if (recaptchaRef.current && typeof recaptchaRef.current.execute === "function") {
+        const token = await recaptchaRef.current.executeAsync()
+        return token
+      }
+      return recaptchaToken
+    } catch {
+      return recaptchaToken
+    }
+  }
+
+  async function handleSendOtp(isResend = false) {
+    try {
+      setError(null)
+
+      if (!isResend) {
+        const errors = validateForm()
+        if (Object.keys(errors).length > 0) {
+          setValidationErrors(errors)
+          setError("Please fill in all required fields correctly")
+          return
+        }
+        setValidationErrors({})
+      }
+
+      setLoading(true)
+
+      let token = recaptchaToken
+      if (!isResend) {
+        token = await executeRecaptcha()
+        setRecaptchaToken(token || null)
+      }
+
+      const res = await fetch("/api/consultant/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: normalizeEmail(formData.email),
+          mobile: formData.phone,
+          recaptchaToken: token,
+          isResend,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || "Failed to send OTP")
+
+      setEmailOtp("")
+      setSmsOtp("")
+      setStep("otp")
+      setOtpExpiresIn(data?.expiresIn ?? 180)
+      setResendCooldown(30)
+    } catch (e) {
+      setError(e.message || "Could not send OTP. Please try again.")
+    } finally {
+      setLoading(false)
+      if (recaptchaRef.current && typeof recaptchaRef.current.reset === "function") {
+        recaptchaRef.current.reset()
+      }
+      setRecaptchaToken(null)
+    }
+  }
+
+  async function handleVerifyOtp() {
+    try {
+      setError(null)
+      setLoading(true)
+
+      const res = await fetch("/api/consultant/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: normalizeEmail(formData.email),
+          emailOtp,
+          smsOtp,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || "Failed to verify OTP")
+
+      setVerificationToken(data.token)
+      setStep("submitting")
+
+      const token = await executeRecaptcha()
+      setRecaptchaToken(token || null)
+
+      const submitRes = await fetch("/api/consultant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          verificationToken: data.token,
+          recaptchaToken: token,
+          formData,
+        }),
+      })
+
+      const submitData = await submitRes.json()
+      if (!submitRes.ok) throw new Error(submitData?.error || "Submission failed")
+
+      setStep("done")
+    } catch (e) {
+      setError(e.message || "Verification or submission failed")
+      setStep("otp")
+    } finally {
+      setLoading(false)
+      if (recaptchaRef.current && typeof recaptchaRef.current.reset === "function") {
+        recaptchaRef.current.reset()
+      }
+      setRecaptchaToken(null)
+    }
   }
 
   return (
@@ -106,24 +295,26 @@ export default function SMEConsultantPage() {
               </h3>
               <div className="grid sm:grid-cols-1 gap-4">
                 {[
-                  "Consultancy to SMEs for business growth & expansion/diversification",
-                  "Listing in SME consultant directory of Chamber",
-                  "Business leads and referral from SME sectors",
-                  "Connectivity with the potential SMEs",
-                  "Mentoring and interactive sessions",
-                  "Monthly and annual contracts with SMEs",
-                  "Suggestions and information for business transformation",
-                  "Assistance for quality productivity and improvement of services",
-                  "Support to SMEs for innovation & inventions",
-                  "Resolving issues and problems related to industrial sectors",
-                  "Full page advertisement in SME Connect Magazine",
-                  "Logo and link with SME Chamber website",
-                  "Sharing articles about business advisory services",
-                  "Support for market development and expansion",
-                  "Exploring business consultancy for SMEs from manufacturing & service sector",
-                  "Participation in round table discussions and debates",
-                  "Free participation in appropriate events",
-                  "Opportunity to be the member of expert committee and jury",
+                  [
+                    "Consultancy to SMEs for business growth & expansion/diversification",
+                    "Listing in SME consultant directory of Chamber",
+                    "Business leads and referral from SME sectors",
+                    "Connectivity with the potential SMEs",
+                    "Mentoring and interactive sessions",
+                    "Monthly and annual contracts with SMEs",
+                    "Suggestions and information for business transformation",
+                    "Assistance for quality productivity and improvement of services",
+                    "Support to SMEs for innovation & inventions",
+                    "Resolving issues and problems related to industrial sectors",
+                    "Full page advertisement in SME Connect Magazine",
+                    "Logo and link with SME Chamber website",
+                    "Sharing articles about business advisory services",
+                    "Support for market development and expansion",
+                    "Exploring business consultancy for SMEs from manufacturing & service sector",
+                    "Participation in round table discussions and debates",
+                    "Free participation in appropriate events",
+                    "Opportunity to be the member of expert committee and jury",
+                  ],
                 ].map((opportunity, index) => (
                   <div
                     key={index}
@@ -162,151 +353,310 @@ export default function SMEConsultantPage() {
                 <div className="w-16 h-1 bg-gradient-to-r from-[#29688A] to-[#1e4a63] mx-auto rounded-full"></div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Consultant Name *</label>
-                    <input
-                      type="text"
-                      name="consultantName"
-                      required
-                      value={formData.consultantName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300"
-                    />
-                  </div>
+              {error && (
+                <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">{error}</div>
+              )}
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Company/Firm Name</label>
-                    <input
-                      type="text"
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300"
-                    />
-                  </div>
+              {step === "form" && (
+                <form
+                  className="space-y-6"
+                  noValidate
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleSendOtp(false)
+                  }}
+                >
+                  <div className="space-y-4">
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Consultant Name *</label>
+                      <input
+                        type="text"
+                        name="consultantName"
+                        required
+                        value={formData.consultantName}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#29688A]/10 ${
+                          validationErrors.consultantName
+                            ? "border-red-300 focus:border-red-500"
+                            : "border-gray-200 focus:border-[#29688A]"
+                        }`}
+                      />
+                      {validationErrors.consultantName && (
+                        <p className="mt-1 text-sm text-red-600">{validationErrors.consultantName}</p>
+                      )}
+                    </div>
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300"
-                    />
-                  </div>
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Company/Firm Name</label>
+                      <input
+                        type="text"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300"
+                      />
+                    </div>
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Phone *</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      required
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300"
-                    />
-                  </div>
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#29688A]/10 ${
+                          validationErrors.email
+                            ? "border-red-300 focus:border-red-500"
+                            : "border-gray-200 focus:border-[#29688A]"
+                        }`}
+                      />
+                      {validationErrors.email && <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>}
+                    </div>
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
-                    <input
-                      type="url"
-                      name="website"
-                      value={formData.website}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300"
-                    />
-                  </div>
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Phone *</label>
+                      <PhoneInput
+                        international
+                        countryCallingCodeEditable={false}
+                        defaultCountry="IN"
+                        value={formData.phone}
+                        onChange={handlePhoneChange}
+                        className={`w-full ${
+                          validationErrors.phone
+                            ? "border-red-300 focus:border-red-500"
+                            : "border-gray-200 focus:border-[#29688A]"
+                        }`}
+                        style={{
+                          "--PhoneInputCountryFlag-height": "1em",
+                          "--PhoneInputCountrySelectArrow-color": "#6b7280",
+                        }}
+                      />
+                      {validationErrors.phone && <p className="mt-1 text-sm text-red-600">{validationErrors.phone}</p>}
+                    </div>
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Years of Experience *</label>
-                    <select
-                      name="experience"
-                      required
-                      value={formData.experience}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300"
-                    >
-                      <option value="">Select Experience</option>
-                      <option value="1-3">1-3 years</option>
-                      <option value="4-7">4-7 years</option>
-                      <option value="8-15">8-15 years</option>
-                      <option value="15+">15+ years</option>
-                    </select>
-                  </div>
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
+                      <input
+                        type="url"
+                        name="website"
+                        value={formData.website}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300"
+                      />
+                    </div>
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Areas of Specialization * (Select multiple)
-                    </label>
-                    <div className="max-h-48 overflow-y-auto border-2 border-gray-200 rounded-xl p-4 bg-gray-50 group-hover:border-gray-300 transition-all duration-200">
-                      {consultingAreas.slice(0, 10).map((area, index) => (
-                        <label
-                          key={index}
-                          className="flex items-center space-x-3 py-2 hover:bg-white rounded-lg px-2 transition-all duration-150 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={formData.specialization.includes(area)}
-                            onChange={() => handleSpecializationChange(area)}
-                            className="w-4 h-4 text-[#29688A] border-2 border-gray-300 rounded focus:ring-[#29688A] focus:ring-2"
-                          />
-                          <span className="text-sm text-gray-700">{area}</span>
-                        </label>
-                      ))}
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Years of Experience *</label>
+                      <select
+                        name="experience"
+                        required
+                        value={formData.experience}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#29688A]/10 ${
+                          validationErrors.experience
+                            ? "border-red-300 focus:border-red-500"
+                            : "border-gray-200 focus:border-[#29688A]"
+                        }`}
+                      >
+                        <option value="">Select Experience</option>
+                        <option value="1-3">1-3 years</option>
+                        <option value="4-7">4-7 years</option>
+                        <option value="8-15">8-15 years</option>
+                        <option value="15+">15+ years</option>
+                      </select>
+                      {validationErrors.experience && (
+                        <p className="mt-1 text-sm text-red-600">{validationErrors.experience}</p>
+                      )}
+                    </div>
+
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Areas of Specialization * (Select multiple)
+                      </label>
+                      <div
+                        className={`max-h-48 overflow-y-auto border-2 rounded-xl p-4 transition-all duration-200 ${
+                          validationErrors.specialization ? "border-red-300" : "border-gray-200"
+                        } bg-gray-50 group-hover:border-gray-300`}
+                      >
+                        {consultingAreas.slice(0, 10).map((area, index) => (
+                          <label
+                            key={index}
+                            className="flex items-center space-x-3 py-2 hover:bg-white rounded-lg px-2 transition-all duration-150 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.specialization.includes(area)}
+                              onChange={() => handleSpecializationChange(area)}
+                              className="w-4 h-4 text-[#29688A] border-2 border-gray-300 rounded focus:ring-[#29688A] focus:ring-2"
+                            />
+                            <span className="text-sm text-gray-700">{area}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {validationErrors.specialization && (
+                        <p className="mt-1 text-sm text-red-600">{validationErrors.specialization}</p>
+                      )}
+                    </div>
+
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Qualifications *</label>
+                      <textarea
+                        name="qualifications"
+                        required
+                        rows={3}
+                        value={formData.qualifications}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#29688A]/10 resize-none ${
+                          validationErrors.qualifications
+                            ? "border-red-300 focus:border-red-500"
+                            : "border-gray-200 focus:border-[#29688A]"
+                        }`}
+                        placeholder="Your educational and professional qualifications..."
+                      ></textarea>
+                      {validationErrors.qualifications && (
+                        <p className="mt-1 text-sm text-red-600">{validationErrors.qualifications}</p>
+                      )}
+                    </div>
+
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Services Offered *</label>
+                      <textarea
+                        name="services"
+                        required
+                        rows={3}
+                        value={formData.services}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#29688A]/10 resize-none ${
+                          validationErrors.services
+                            ? "border-red-300 focus:border-red-500"
+                            : "border-gray-200 focus:border-[#29688A]"
+                        }`}
+                        placeholder="Describe your consulting services and expertise..."
+                      ></textarea>
+                      {validationErrors.services && (
+                        <p className="mt-1 text-sm text-red-600">{validationErrors.services}</p>
+                      )}
+                    </div>
+
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Message</label>
+                      <textarea
+                        name="message"
+                        rows={3}
+                        value={formData.message}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300 resize-none"
+                        placeholder="Any additional information..."
+                      ></textarea>
                     </div>
                   </div>
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Qualifications *</label>
-                    <textarea
-                      name="qualifications"
-                      required
-                      rows="3"
-                      value={formData.qualifications}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300 resize-none"
-                      placeholder="Your educational and professional qualifications..."
-                    ></textarea>
-                  </div>
+                  {siteKey ? (
+                    <div className="mt-2">
+                      <ReCAPTCHA ref={recaptchaRef} sitekey={siteKey} onChange={(token) => setRecaptchaToken(token)} />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-amber-600">Missing reCAPTCHA site key.</p>
+                  )}
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Services Offered *</label>
-                    <textarea
-                      name="services"
-                      required
-                      rows="3"
-                      value={formData.services}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300 resize-none"
-                      placeholder="Describe your consulting services and expertise..."
-                    ></textarea>
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-[#29688A] to-[#1e4a63] text-white py-4 px-6 rounded-xl hover:from-[#1e4a63] hover:to-[#29688A] transition-all duration-300 font-semibold text-lg shadow-lg disabled:opacity-50"
+                  >
+                    {loading ? "Sending OTP..." : "Send OTP"}
+                  </button>
+                </form>
+              )}
 
-                  <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Message</label>
-                    <textarea
-                      name="message"
-                      rows="3"
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 transition-all duration-200 group-hover:border-gray-300 resize-none"
-                      placeholder="Any additional information..."
-                    ></textarea>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-[#29688A] to-[#1e4a63] text-white py-4 px-6 rounded-xl hover:from-[#1e4a63] hover:to-[#29688A] transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              {step === "otp" && (
+                <form
+                  className="space-y-4"
+                  noValidate
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleVerifyOtp()
+                  }}
                 >
-                  Submit Application
-                </button>
-              </form>
+                  <p className="text-gray-700">We sent verification codes to:</p>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <div>
+                      📧 <span className="font-semibold">{formData.email}</span>
+                    </div>
+                    <div>
+                      📱 <span className="font-semibold">{formData.phone}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Email OTP</label>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        inputMode="numeric"
+                        placeholder="Enter email OTP"
+                        value={emailOtp}
+                        onChange={(e) => setEmailOtp(e.target.value.replace(/[^0-9]/g, ""))}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 tracking-widest text-center"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">SMS OTP</label>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        inputMode="numeric"
+                        placeholder="Enter SMS OTP"
+                        value={smsOtp}
+                        onChange={(e) => setSmsOtp(e.target.value.replace(/[^0-9]/g, ""))}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#29688A] focus:ring-4 focus:ring-[#29688A]/10 tracking-widest text-center"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Expires in: {otpExpiresIn}s</span>
+                    <button
+                      type="button"
+                      disabled={resendCooldown > 0 || loading}
+                      onClick={() => handleSendOtp(true)}
+                      className="text-[#29688A] font-semibold disabled:opacity-50"
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend OTP"}
+                    </button>
+                  </div>
+
+                  {siteKey ? (
+                    <div className="mt-2">
+                      <ReCAPTCHA ref={recaptchaRef} sitekey={siteKey} onChange={(token) => setRecaptchaToken(token)} />
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="submit"
+                    disabled={loading || emailOtp.length !== 6 || smsOtp.length !== 6}
+                    className="w-full bg-gradient-to-r from-[#29688A] to-[#1e4a63] text-white py-3 px-6 rounded-xl hover:from-[#1e4a63] hover:to-[#29688A] transition-all font-semibold shadow-lg disabled:opacity-50"
+                  >
+                    {loading ? "Verifying..." : "Verify & Submit"}
+                  </button>
+                </form>
+              )}
+
+              {step === "submitting" && (
+                <div className="py-6 text-center">
+                  <p className="text-gray-700">Submitting your application...</p>
+                </div>
+              )}
+
+              {step === "done" && (
+                <div className="py-6 text-center">
+                  <h4 className="text-lg font-semibold text-[#29688A] mb-2">Application submitted successfully!</h4>
+                  <p className="text-gray-700">We will get back to you within 2-3 business days.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

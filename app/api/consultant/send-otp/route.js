@@ -51,13 +51,19 @@ function isE164(phone) {
   return /^\+?[1-9]\d{7,14}$/.test(String(phone || ""))
 }
 
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
 export async function POST(request) {
   try {
     const { email, mobile, recaptchaToken, isResend } = await request.json()
     const normalizedEmail = normalizeEmail(email)
 
-    if (!normalizedEmail) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 })
+    // Validate inputs
+    if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+      return NextResponse.json({ error: "Valid email is required" }, { status: 400 })
     }
     if (!isE164(mobile)) {
       return NextResponse.json({ error: "Valid mobile number (E.164) is required" }, { status: 400 })
@@ -120,31 +126,65 @@ export async function POST(request) {
       if (!ok) return NextResponse.json({ error: "Invalid reCAPTCHA verification" }, { status: 400 })
     }
 
-    // Generate both OTPs
-    const emailOtp = generateOTP()
-    const smsOtp = generateOTP()
-    const expiresAt = now + 3 * 60 * 1000 // 3 minutes
+    // Check Twilio configuration
+    const accountSid = process.env.TWILIO_ACCOUNT_SID
+    const authToken = process.env.TWILIO_AUTH_TOKEN
+    const fromNumber = process.env.TWILIO_PHONE_NUMBER
 
-    otpStorage.set(normalizedEmail, {
-      email: normalizedEmail,
-      mobile,
-      clientIP,
-      emailOtp,
-      smsOtp,
-      createdAt: now,
-      expiresAt,
-    })
+    if (!accountSid || !authToken || !fromNumber) {
+      console.error("Twilio env vars missing. Please set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER")
+      return NextResponse.json({ error: "Server SMS configuration missing" }, { status: 500 })
+    }
 
-    // Send email OTP
+    // Check Gmail configuration
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      console.error("Gmail env vars missing. Please set GMAIL_USER, GMAIL_APP_PASSWORD")
+      return NextResponse.json({ error: "Server email configuration missing" }, { status: 500 })
+    }
+
+    const client = twilio(accountSid, authToken)
+
+    // STEP 1: Validate phone number first (before generating OTPs)
+    try {
+      await client.lookups.v1.phoneNumbers(mobile).fetch()
+    } catch (lookupError) {
+      console.error("Phone number lookup error:", lookupError)
+      return NextResponse.json(
+        {
+          error: "Invalid phone number format or unsupported region",
+        },
+        { status: 400 },
+      )
+    }
+
+    // STEP 2: Test email configuration (create transporter and verify)
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
     })
 
+    try {
+      // Verify SMTP connection
+      await transporter.verify()
+    } catch (emailConfigError) {
+      console.error("Email configuration error:", emailConfigError)
+      return NextResponse.json(
+        {
+          error: "Email service configuration error",
+        },
+        { status: 500 },
+      )
+    }
+
+    // STEP 3: Only generate OTPs after validation
+    const emailOtp = generateOTP()
+    const smsOtp = generateOTP()
+    const expiresAt = now + 3 * 60 * 1000 // 3 minutes
+
     const otpEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #29688A; color: white; padding: 20px; text-align: center;">
-          <h1>Membership Application OTP</h1>
+          <h1>SME Consultant Application OTP</h1>
         </div>
         <div style="padding: 30px; text-align: center;">
           <h2 style="color: #29688A; margin-bottom: 20px;">Your Email Verification Code</h2>
@@ -157,40 +197,89 @@ export async function POST(request) {
       </div>
     `
 
-    const emailPromise = transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to: normalizedEmail,
-      subject: "Membership Application - Email OTP",
-      html: otpEmailHtml,
-    })
+    // STEP 4: Send both OTPs with proper error handling
+    try {
+      // Create timeout promise for email
+      const emailTimeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Email sending timeout")), 60000),
+      )
 
-    // Send SMS OTP via Twilio
-    const accountSid = process.env.TWILIO_ACCOUNT_SID
-    const authToken = process.env.TWILIO_AUTH_TOKEN
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER
+      const emailPromise = transporter.sendMail({
+        from: process.env.GMAIL_USER,
+        to: normalizedEmail,
+        subject: "SME Consultant Application - Email OTP",
+        html: otpEmailHtml,
+      })
 
-    if (!accountSid || !authToken || !fromNumber) {
-      console.error("Twilio env vars missing. Please set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER")
-      return NextResponse.json({ error: "Server SMS configuration missing" }, { status: 500 })
+      const smsPromise = client.messages.create({
+        body: `Your SME Consultant verification code is ${smsOtp}. It expires in 3 minutes.`,
+        from: fromNumber,
+        to: mobile,
+      })
+
+      // Wait for both to complete - if any fails, both fail
+      await Promise.all([Promise.race([emailPromise, emailTimeoutPromise]), smsPromise])
+
+      // STEP 5: Only store OTP data if both succeeded
+      otpStorage.set(normalizedEmail, {
+        email: normalizedEmail,
+        mobile,
+        clientIP,
+        emailOtp,
+        smsOtp,
+        createdAt: now,
+        expiresAt,
+      })
+
+      return NextResponse.json({ message: "OTPs sent successfully", expiresIn: 180 })
+    } catch (sendError) {
+      console.error("Error sending OTPs:", sendError)
+
+      // Provide specific error messages based on error type
+      if (sendError.message && sendError.message.includes("unverified")) {
+        return NextResponse.json(
+          {
+            error:
+              "Phone number is unverified. For Twilio trial accounts, please verify your phone number at twilio.com/console/phone-numbers/verified or upgrade your account.",
+          },
+          { status: 400 },
+        )
+      } else if (sendError.message && sendError.message.includes("not a valid phone number")) {
+        return NextResponse.json(
+          {
+            error: "Invalid phone number format",
+          },
+          { status: 400 },
+        )
+      } else if (sendError.message && sendError.message.includes("timeout")) {
+        return NextResponse.json(
+          {
+            error: "Email sending timeout. Please try again.",
+          },
+          { status: 500 },
+        )
+      } else if (
+        sendError.message &&
+        (sendError.message.includes("Invalid login") ||
+          sendError.message.includes("Username and Password not accepted"))
+      ) {
+        return NextResponse.json(
+          {
+            error: "Email service authentication failed. Please check server configuration.",
+          },
+          { status: 500 },
+        )
+      } else {
+        return NextResponse.json(
+          {
+            error: "Failed to send OTPs. Please check your email and phone number and try again.",
+          },
+          { status: 500 },
+        )
+      }
     }
-
-    const client = twilio(accountSid, authToken)
-    const smsPromise = client.messages.create({
-      body: `Your membership verification code is ${smsOtp}. It expires in 3 minutes.`,
-      from: fromNumber,
-      to: mobile,
-    })
-
-    // Timeout guard for email send (60s)
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Email sending timeout")), 60000),
-    )
-
-    await Promise.all([Promise.race([emailPromise, timeoutPromise]), smsPromise])
-
-    return NextResponse.json({ message: "OTPs sent successfully", expiresIn: 180 })
   } catch (error) {
-    console.error("Error sending OTPs:", error)
+    console.error("Error in OTP route:", error)
     return NextResponse.json({ error: "Failed to send OTPs" }, { status: 500 })
   }
 }

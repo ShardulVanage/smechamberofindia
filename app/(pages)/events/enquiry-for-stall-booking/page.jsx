@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import { Phone, Mail, Send, CheckCircle, Loader2, Clock } from "lucide-react"
+import { Phone, Mail, Send, CheckCircle, Loader2, Clock, MessageSquare } from "lucide-react"
+import PhoneInput from "react-phone-number-input"
+import "react-phone-number-input/style.css"
 
 export default function EnquiryForStallBooking() {
   const [formData, setFormData] = useState({
@@ -18,7 +20,8 @@ export default function EnquiryForStallBooking() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showOtpStep, setShowOtpStep] = useState(false)
-  const [otp, setOtp] = useState("")
+  const [emailOtp, setEmailOtp] = useState("")
+  const [smsOtp, setSmsOtp] = useState("")
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
   const [isResendingOtp, setIsResendingOtp] = useState(false)
   const [canResendOtp, setCanResendOtp] = useState(false)
@@ -30,7 +33,7 @@ export default function EnquiryForStallBooking() {
 
   useEffect(() => {
     const loadRecaptcha = () => {
-      if ((window ).grecaptcha) {
+      if (window.grecaptcha) {
         setRecaptchaLoaded(true)
         return
       }
@@ -45,7 +48,7 @@ export default function EnquiryForStallBooking() {
   }, [])
 
   useEffect(() => {
-    const grecaptcha = (window ).grecaptcha
+    const grecaptcha = window.grecaptcha
     if (!showOtpStep && recaptchaLoaded && grecaptcha && recaptchaRef.current) {
       if (recaptchaWidgetId.current !== null) {
         try {
@@ -71,7 +74,7 @@ export default function EnquiryForStallBooking() {
     }
 
     return () => {
-      const grecaptcha = (window).grecaptcha
+      const grecaptcha = window.grecaptcha
       if (recaptchaWidgetId.current !== null && grecaptcha) {
         try {
           grecaptcha.reset(recaptchaWidgetId.current)
@@ -123,6 +126,13 @@ export default function EnquiryForStallBooking() {
     }))
   }
 
+  const handlePhoneChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      phone: value || "",
+    }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
@@ -136,13 +146,12 @@ export default function EnquiryForStallBooking() {
       setError("Please enter a valid email address.")
       return
     }
-    const mobileDigits = (formData.phone || "").replace(/\D/g, "")
-    if (mobileDigits.length < 10) {
-      setError("Please enter a valid 10-digit mobile number.")
+    if (!formData.phone || formData.phone.length < 10) {
+      setError("Please enter a valid phone number.")
       return
     }
 
-    const grecaptcha = (window ).grecaptcha
+    const grecaptcha = window.grecaptcha
     let recaptchaToken = null
     if (recaptchaLoaded && grecaptcha) {
       recaptchaToken =
@@ -162,7 +171,7 @@ export default function EnquiryForStallBooking() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
-          mobile: mobileDigits,
+          phone: formData.phone,
           recaptchaToken,
         }),
       })
@@ -176,7 +185,8 @@ export default function EnquiryForStallBooking() {
       setResendTimer(60)
       setOtpExpireTimer(180)
       setCanResendOtp(false)
-      setOtp("")
+      setEmailOtp("")
+      setSmsOtp("")
     } catch (err) {
       setError(err?.message || "Failed to send OTP. Please try again.")
     } finally {
@@ -188,8 +198,12 @@ export default function EnquiryForStallBooking() {
     e.preventDefault()
     setError("")
 
-    if (!otp.trim() || otp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP.")
+    if (!emailOtp.trim() || emailOtp.length !== 6) {
+      setError("Please enter a valid 6-digit email OTP.")
+      return
+    }
+    if (!smsOtp.trim() || smsOtp.length !== 6) {
+      setError("Please enter a valid 6-digit SMS OTP.")
       return
     }
 
@@ -200,7 +214,9 @@ export default function EnquiryForStallBooking() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
-          otp,
+          phone: formData.phone,
+          emailOtp,
+          smsOtp,
           formData: {
             name: formData.name,
             email: formData.email,
@@ -220,8 +236,9 @@ export default function EnquiryForStallBooking() {
 
       setIsSubmitted(true)
       setShowOtpStep(false)
-      setOtp("")
-      const grecaptcha = (window).grecaptcha
+      setEmailOtp("")
+      setSmsOtp("")
+      const grecaptcha = window.grecaptcha
       if (recaptchaLoaded && grecaptcha && recaptchaWidgetId.current !== null) {
         try {
           grecaptcha.reset(recaptchaWidgetId.current)
@@ -256,7 +273,7 @@ export default function EnquiryForStallBooking() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
-          mobile: (formData.phone || "").replace(/\D/g, ""),
+          phone: formData.phone,
           isResend: true,
         }),
       })
@@ -267,7 +284,8 @@ export default function EnquiryForStallBooking() {
       setResendTimer(60)
       setOtpExpireTimer(180)
       setCanResendOtp(false)
-      setOtp("")
+      setEmailOtp("")
+      setSmsOtp("")
     } catch (err) {
       setError(err?.message || "Failed to resend OTP. Please try again.")
     } finally {
@@ -430,14 +448,22 @@ export default function EnquiryForStallBooking() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                      <input
-                        type="tel"
-                        name="phone"
+                      <PhoneInput
+                        international
+                        countryCallingCodeEditable={false}
+                        defaultCountry="IN"
                         value={formData.phone}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200"
-                        placeholder="Enter your phone number"
+                        onChange={handlePhoneChange}
+                        className="w-full"
+                        style={{
+                          "--PhoneInputCountryFlag-height": "1em",
+                          "--PhoneInputCountrySelectArrow-color": "#6b7280",
+                        }}
+                        numberInputProps={{
+                          className:
+                            "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200",
+                          placeholder: "Enter your phone number",
+                        }}
                       />
                     </div>
                     <div>
@@ -525,9 +551,9 @@ export default function EnquiryForStallBooking() {
               ) : (
                 <div className="space-y-6">
                   <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 className="text-lg font-semibold text-[#29688A] mb-2">OTP Verification</h3>
+                    <h3 className="text-lg font-semibold text-[#29688A] mb-2">Dual OTP Verification</h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      We've sent a 6-digit OTP to your email ({formData.email})
+                      We've sent 6-digit OTPs to your email ({formData.email}) and phone ({formData.phone})
                     </p>
                     <div className="flex items-center justify-center gap-4 text-sm">
                       <div className="flex items-center gap-1 text-orange-600">
@@ -538,18 +564,35 @@ export default function EnquiryForStallBooking() {
                   </div>
 
                   <form onSubmit={handleOtpVerification} className="space-y-4">
-                    <div>
-                      <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
-                        Enter 6-digit OTP *
-                      </label>
-                      <input
-                        id="otp"
-                        placeholder="Enter OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200 text-center text-lg tracking-widest"
-                        maxLength={6}
-                      />
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="emailOtp" className="block text-sm font-medium text-gray-700 mb-2">
+                          <Mail className="w-4 h-4 inline mr-1" />
+                          Email OTP *
+                        </label>
+                        <input
+                          id="emailOtp"
+                          placeholder="Email OTP"
+                          value={emailOtp}
+                          onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200 text-center text-lg tracking-widest"
+                          maxLength={6}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="smsOtp" className="block text-sm font-medium text-gray-700 mb-2">
+                          <MessageSquare className="w-4 h-4 inline mr-1" />
+                          SMS OTP *
+                        </label>
+                        <input
+                          id="smsOtp"
+                          placeholder="SMS OTP"
+                          value={smsOtp}
+                          onChange={(e) => setSmsOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#29688A] focus:border-transparent transition-all duration-200 text-center text-lg tracking-widest"
+                          maxLength={6}
+                        />
+                      </div>
                     </div>
 
                     {error ? (
@@ -569,7 +612,7 @@ export default function EnquiryForStallBooking() {
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...
                           </>
                         ) : (
-                          "Verify & Submit"
+                          "Verify Both OTPs & Submit"
                         )}
                       </button>
 
@@ -582,7 +625,7 @@ export default function EnquiryForStallBooking() {
                         {isResendingOtp ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : canResendOtp ? (
-                          "Resend OTP"
+                          "Resend Both"
                         ) : (
                           `Resend in ${resendTimer}s`
                         )}
@@ -594,7 +637,8 @@ export default function EnquiryForStallBooking() {
                     type="button"
                     onClick={() => {
                       setShowOtpStep(false)
-                      setOtp("")
+                      setEmailOtp("")
+                      setSmsOtp("")
                       setError("")
                       if (recaptchaRef.current) {
                         recaptchaRef.current.innerHTML = ""

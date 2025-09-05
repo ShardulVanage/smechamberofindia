@@ -1,5 +1,8 @@
+//send-otp
+
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
+import twilio from "twilio"
 
 const g = globalThis
 if (!g.otpStorage) g.otpStorage = new Map()
@@ -13,6 +16,8 @@ const ipRateLimitStorage = g.ipRateLimitStorage
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
 const MAX_ATTEMPTS = 3
 const IP_MAX_ATTEMPTS = 5 // per-IP cap regardless of email
+
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
 function normalizeEmail(email) {
   return String(email || "")
@@ -104,32 +109,26 @@ export async function POST(request) {
       if (!ok) return NextResponse.json({ error: "Invalid reCAPTCHA verification" }, { status: 400 })
     }
 
-    const otp = generateOTP()
-    otpStorage.set(normalizedEmail, {
-      otp,
-      email: normalizedEmail,
-      mobile: mobile || phone || "",
-      clientIP,
-      createdAt: now,
-      expiresAt: now + 3 * 60 * 1000, // 3 minutes
-    })
+    const emailOtp = generateOTP()
+    const smsOtp = generateOTP()
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
     })
 
-    const otpEmailHtml = `
+     const otpEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #29688A; color: white; padding: 20px; text-align: center;">
-          <h1>Enquiry Verification OTP</h1>
+          <h1>Enquiry Verification - Email OTP</h1>
         </div>
         <div style="padding: 30px; text-align: center;">
-          <h2 style="color: #29688A; margin-bottom: 20px;">Your One-Time Code</h2>
+          <h2 style="color: #29688A; margin-bottom: 20px;">Your Email Verification Code</h2>
           <div style="background-color: #f8f9fa; border: 2px dashed #29688A; padding: 20px; margin: 20px 0; border-radius: 8px;">
-            <h1 style="color: #29688A; font-size: 36px; margin: 0; letter-spacing: 8px;">${otp}</h1>
+            <h1 style="color: #29688A; font-size: 36px; margin: 0; letter-spacing: 8px;">${emailOtp}</h1>
           </div>
-          <p style="color: #666; margin: 20px 0;">This OTP is valid for <strong>3 minutes</strong>.</p>
+          <p style="color: #666; margin: 20px 0;">This email OTP is valid for <strong>3 minutes</strong>.</p>
+          <p style="color: #666; font-size: 14px;">You will also receive an SMS OTP on your phone number.</p>
           <p style="color: #666; font-size: 14px;">If you didn't request this OTP, please ignore this email.</p>
         </div>
         <div style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
@@ -145,14 +144,44 @@ export async function POST(request) {
       html: otpEmailHtml,
     })
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Email sending timeout")), 60000),
-    )
+    const smsPromise = twilioClient.messages.create({
+      body: `Your SMS verification code for stall booking enquiry is: ${smsOtp}. Valid for 3 minutes. Do not share this code.`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: phone,
+    })
 
-    await Promise.race([emailPromise, timeoutPromise])
-    return NextResponse.json({ message: "OTP sent successfully", expiresIn: 180 })
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("OTP sending timeout")), 60000))
+
+    try {
+      await Promise.race([Promise.all([emailPromise, smsPromise]), timeoutPromise])
+      
+      // Only store OTP data if both email and SMS were sent successfully
+      otpStorage.set(normalizedEmail, {
+        emailOtp,
+        smsOtp,
+        email: normalizedEmail,
+        phone: phone || "",
+        clientIP,
+        createdAt: now,
+        expiresAt: now + 3 * 60 * 1000, // 3 minutes
+      })
+      
+    } catch (error) {
+      // Check if it's a Twilio error (phone number related)
+      if (error.code && (error.code === 21211 || error.code === 21614 || error.message?.includes('phone number'))) {
+        throw new Error("Invalid phone number. Please check and try again.")
+      }
+      
+      // For other errors, throw a generic message
+      throw new Error("Failed to send verification codes. Please try again.")
+    }
+
+    return NextResponse.json({
+      message: "OTPs sent successfully to both email and phone",
+      expiresIn: 180,
+    })
   } catch (error) {
     console.error("[enquiry/send-otp] Error:", error)
-    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "Failed to send OTP" }, { status: 500 })
   }
 }

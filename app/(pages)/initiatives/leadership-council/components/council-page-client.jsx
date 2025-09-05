@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, Users, Target, Lightbulb, TrendingUp, Globe, Award } from "lucide-react"
 import Link from "next/link"
-import MembershipForm from "./membership-form"
+import CouncilForm from "./membership-form"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -279,7 +279,7 @@ export default function CouncilPageClient({ siteKey }) {
                 <CardTitle className="text-2xl text-center text-[#29688A]">Membership Application</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <MembershipForm siteKey={siteKey} />
+                <CouncilForm siteKey={siteKey} />
               </CardContent>
             </Card>
           </motion.div>

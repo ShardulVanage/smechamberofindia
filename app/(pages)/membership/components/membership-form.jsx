@@ -6,13 +6,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input"
+import "react-phone-number-input/style.css"
 
 export default function MembershipForm({ membershipType }) {
   const [notification, setNotification] = useState({ type: null, message: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false)
   const [showOtpStep, setShowOtpStep] = useState(false)
-  const [otp, setOtp] = useState("")
+  const [emailOtp, setEmailOtp] = useState("")
+  const [smsOtp, setSmsOtp] = useState("")
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
   const [canResendOtp, setCanResendOtp] = useState(false)
   const [resendTimer, setResendTimer] = useState(60)
@@ -27,7 +30,7 @@ export default function MembershipForm({ membershipType }) {
     businessActivity: "",
     turnover: "",
     email: "",
-    mobile: "",
+    mobile: "", // will hold E.164 number from PhoneInput
     city: "",
     state: "",
     country: "",
@@ -121,7 +124,6 @@ export default function MembershipForm({ membershipType }) {
 
   useEffect(() => {
     if (!showOtpStep && recaptchaLoaded && window.grecaptcha && recaptchaRef.current) {
-      // Clean up existing widget if it exists
       if (recaptchaWidgetId.current !== null) {
         try {
           window.grecaptcha.reset(recaptchaWidgetId.current)
@@ -130,10 +132,8 @@ export default function MembershipForm({ membershipType }) {
         }
       }
 
-      // Small delay to ensure DOM is ready and previous cleanup is complete
       setTimeout(() => {
         try {
-          // Check if the container is empty before rendering
           if (recaptchaRef.current && recaptchaRef.current.innerHTML === "") {
             recaptchaWidgetId.current = window.grecaptcha.render(recaptchaRef.current, {
               sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
@@ -141,7 +141,6 @@ export default function MembershipForm({ membershipType }) {
           }
         } catch (error) {
           console.log("[v0] Error rendering reCAPTCHA:", error)
-          // Clear the container and try again
           if (recaptchaRef.current) {
             recaptchaRef.current.innerHTML = ""
             recaptchaWidgetId.current = window.grecaptcha.render(recaptchaRef.current, {
@@ -152,7 +151,6 @@ export default function MembershipForm({ membershipType }) {
       }, 100)
     }
 
-    // Cleanup function
     return () => {
       if (recaptchaWidgetId.current !== null && window.grecaptcha) {
         try {
@@ -188,7 +186,7 @@ export default function MembershipForm({ membershipType }) {
     ]
 
     for (const field of requiredFields) {
-      if (!formData[field].trim()) {
+      if (!String(formData[field] || "").trim()) {
         showNotification(
           "error",
           `${field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())} is required`,
@@ -203,9 +201,8 @@ export default function MembershipForm({ membershipType }) {
       return false
     }
 
-    const mobileRegex = /^\d{10}$/
-    if (!mobileRegex.test(formData.mobile)) {
-      showNotification("error", "Please enter a valid 10-digit mobile number")
+    if (!isValidPhoneNumber(formData.mobile || "")) {
+      showNotification("error", "Please enter a valid mobile number (include country code)")
       return false
     }
 
@@ -239,7 +236,7 @@ export default function MembershipForm({ membershipType }) {
         },
         body: JSON.stringify({
           email: formData.email,
-          mobile: formData.mobile,
+          mobile: formData.mobile, // E.164 phone from PhoneInput
           recaptchaToken:
             recaptchaLoaded && window.grecaptcha
               ? recaptchaWidgetId.current !== null
@@ -256,8 +253,9 @@ export default function MembershipForm({ membershipType }) {
         setResendTimer(60)
         setOtpExpireTimer(180)
         setCanResendOtp(false)
-        setOtp("")
-        showNotification("success", "OTP sent successfully to your email and mobile number.")
+        setEmailOtp("")
+        setSmsOtp("")
+        showNotification("success", "OTPs sent to your email and mobile number.")
       } else {
         showNotification("error", data.error || "Failed to send OTP. Please try again.")
       }
@@ -271,13 +269,13 @@ export default function MembershipForm({ membershipType }) {
   const handleOtpVerification = async (e) => {
     e.preventDefault()
 
-    if (!otp.trim()) {
-      showNotification("error", "Please enter the OTP")
+    if (!emailOtp.trim() || !smsOtp.trim()) {
+      showNotification("error", "Please enter both Email OTP and SMS OTP")
       return
     }
 
-    if (otp.length !== 6) {
-      showNotification("error", "Please enter a valid 6-digit OTP")
+    if (emailOtp.length !== 6 || smsOtp.length !== 6) {
+      showNotification("error", "Please enter valid 6-digit OTPs")
       return
     }
 
@@ -291,7 +289,9 @@ export default function MembershipForm({ membershipType }) {
         },
         body: JSON.stringify({
           email: formData.email,
-          otp: otp,
+          mobile: formData.mobile,
+          emailOtp,
+          smsOtp,
           formData: {
             ...formData,
             membershipType,
@@ -322,7 +322,8 @@ export default function MembershipForm({ membershipType }) {
           country: "",
           interestedFor: "",
         })
-        setOtp("")
+        setEmailOtp("")
+        setSmsOtp("")
         setShowOtpStep(false)
 
         if (recaptchaLoaded && window.grecaptcha && recaptchaWidgetId.current !== null) {
@@ -333,7 +334,7 @@ export default function MembershipForm({ membershipType }) {
           }
         }
       } else {
-        showNotification("error", data.error || "Invalid OTP. Please try again.")
+        showNotification("error", data.error || "Invalid OTPs. Please try again.")
       }
     } catch (error) {
       showNotification("error", "Failed to verify OTP. Please try again.")
@@ -364,8 +365,9 @@ export default function MembershipForm({ membershipType }) {
         setResendTimer(60)
         setOtpExpireTimer(180)
         setCanResendOtp(false)
-        setOtp("")
-        showNotification("success", "New OTP sent successfully.")
+        setEmailOtp("")
+        setSmsOtp("")
+        showNotification("success", "New OTPs sent successfully.")
       } else {
         showNotification("error", data.error || "Failed to resend OTP. Please try again.")
       }
@@ -491,14 +493,19 @@ export default function MembershipForm({ membershipType }) {
 
           <div>
             <Label htmlFor="mobile">Mobile Number *</Label>
-            <Input
-              id="mobile"
-              placeholder="10 digit Mobile Number"
-              value={formData.mobile}
-              onChange={(e) => handleInputChange("mobile", e.target.value)}
-              className="mt-1"
-              maxLength={10}
-            />
+            <div className="mt-1">
+              <PhoneInput
+                id="mobile"
+                placeholder="Enter phone number"
+                defaultCountry="IN"
+                value={formData.mobile}
+                onChange={(value) => handleInputChange("mobile", value || "")}
+                international
+                countryCallingCodeEditable={false}
+                        className="w-full px-4 py-1.5  shadow-2xs border  rounded-md text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-[#4d724d]/50"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +91, +1).</p>
           </div>
 
           <div>
@@ -564,10 +571,10 @@ export default function MembershipForm({ membershipType }) {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Sending OTP...
+                Sending OTPs...
               </>
             ) : (
-              "Send OTP"
+              "Send OTPs"
             )}
           </Button>
         </form>
@@ -576,8 +583,7 @@ export default function MembershipForm({ membershipType }) {
           <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="text-lg font-semibold text-[#29688A] mb-2">OTP Verification</h3>
             <p className="text-sm text-gray-600 mb-4">
-              We've sent a 6-digit OTP to your email ({formData.email})
-              {/* and mobile number ({formData.mobile}) */}
+              We've sent 6-digit OTPs to your email ({formData.email}) and mobile number ({formData.mobile})
             </p>
             <div className="flex items-center justify-center gap-4 text-sm">
               <div className="flex items-center gap-1 text-orange-600">
@@ -589,16 +595,29 @@ export default function MembershipForm({ membershipType }) {
 
           <form onSubmit={handleOtpVerification} className="space-y-4">
             <div>
-              <Label htmlFor="otp">Enter 6-digit OTP *</Label>
+              <Label htmlFor="emailOtp">Enter Email OTP *</Label>
               <Input
-                id="otp"
-                placeholder="Enter OTP"
-                value={otp}
+                id="emailOtp"
+                placeholder="Enter 6-digit Email OTP"
+                value={emailOtp}
                 onChange={(e) => {
-                  setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-                  if (notification.type) {
-                    setNotification({ type: null, message: "" })
-                  }
+                  setEmailOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  if (notification.type) setNotification({ type: null, message: "" })
+                }}
+                className="mt-1 text-center text-lg tracking-widest"
+                maxLength={6}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="smsOtp">Enter SMS OTP *</Label>
+              <Input
+                id="smsOtp"
+                placeholder="Enter 6-digit SMS OTP"
+                value={smsOtp}
+                onChange={(e) => {
+                  setSmsOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  if (notification.type) setNotification({ type: null, message: "" })
                 }}
                 className="mt-1 text-center text-lg tracking-widest"
                 maxLength={6}
@@ -631,7 +650,7 @@ export default function MembershipForm({ membershipType }) {
                 {isResendingOtp ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : canResendOtp ? (
-                  "Resend OTP"
+                  "Resend OTPs"
                 ) : (
                   `Resend in ${resendTimer}s`
                 )}
@@ -644,7 +663,8 @@ export default function MembershipForm({ membershipType }) {
             variant="ghost"
             onClick={() => {
               setShowOtpStep(false)
-              setOtp("")
+              setEmailOtp("")
+              setSmsOtp("")
               setNotification({ type: null, message: "" })
               if (recaptchaRef.current) {
                 recaptchaRef.current.innerHTML = ""

@@ -75,63 +75,55 @@ export async function POST(request) {
     const adminEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #29688A; color: white; padding: 20px; text-align: center;">
-          <h1>New Strategic Partnership Application</h1>
+          <h1>New SME Consultant Application</h1>
         </div>
         <div style="padding: 20px; background-color: #f9f9f9;">
           <h2 style="color: #29688A;">Application Details</h2>
           <table style="width: 100%; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Name:</td>
-              <td style="padding: 8px;">${formData?.name || ""}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Title:</td>
-              <td style="padding: 8px;">${formData?.title || ""}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Designation:</td>
-              <td style="padding: 8px;">${formData?.designation || ""}</td>
+              <td style="padding: 8px; font-weight: bold;">Consultant Name:</td>
+              <td style="padding: 8px;">${formData?.consultantName || ""}</td>
             </tr>
             <tr style="border-bottom: 1px solid #ddd;">
               <td style="padding: 8px; font-weight: bold;">Company Name:</td>
               <td style="padding: 8px;">${formData?.companyName || ""}</td>
             </tr>
             <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Business Activity:</td>
-              <td style="padding: 8px;">${formData?.businessActivity || ""}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Business Sector:</td>
-              <td style="padding: 8px;">${formData?.businessSector || ""}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Business Interest:</td>
-              <td style="padding: 8px;">${formData?.businessInterest || ""}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Products & Services:</td>
-              <td style="padding: 8px;">${formData?.productsServices || ""}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">SME Business Sectors:</td>
-              <td style="padding: 8px;">${formData?.smeBusinessSectors || ""}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #ddd;">
               <td style="padding: 8px; font-weight: bold;">Email:</td>
               <td style="padding: 8px;">${tokenData.email}</td>
             </tr>
             <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Contact:</td>
-              <td style="padding: 8px;">${formData?.contactDetail || ""}</td>
+              <td style="padding: 8px; font-weight: bold;">Phone:</td>
+              <td style="padding: 8px;">${formData?.phone || ""}</td>
             </tr>
             <tr style="border-bottom: 1px solid #ddd;">
-              <td style="padding: 8px; font-weight: bold;">Address:</td>
-              <td style="padding: 8px;">${formData?.address || ""}</td>
+              <td style="padding: 8px; font-weight: bold;">Website:</td>
+              <td style="padding: 8px;">${formData?.website || ""}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px; font-weight: bold;">Experience:</td>
+              <td style="padding: 8px;">${formData?.experience || ""}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px; font-weight: bold;">Specialization:</td>
+              <td style="padding: 8px;">${formData?.specialization?.join(", ") || ""}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px; font-weight: bold;">Qualifications:</td>
+              <td style="padding: 8px;">${formData?.qualifications || ""}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px; font-weight: bold;">Services:</td>
+              <td style="padding: 8px;">${formData?.services || ""}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px; font-weight: bold;">Message:</td>
+              <td style="padding: 8px;">${formData?.message || ""}</td>
             </tr>
           </table>
         </div>
         <div style="background-color: #29688A; color: white; padding: 10px; text-align: center;">
-          <p>Please review and process this Strategic Partnership application.</p>
+          <p>Please review and process this SME Consultant application.</p>
         </div>
       </div>
     `
@@ -139,21 +131,20 @@ export async function POST(request) {
     const userEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #29688A; color: white; padding: 20px; text-align: center;">
-          <h1>Strategic Partnership Application Received</h1>
+          <h1>SME Consultant Application Received</h1>
         </div>
         <div style="padding: 20px;">
-          <p>Dear ${formData?.name || ""},</p>
-          <p>Thank you for your interest in becoming a Strategic Partner with SME Chamber of India. We have successfully received your application with the following details:</p>
+          <p>Dear ${formData?.consultantName || ""},</p>
+          <p>Thank you for your interest in joining our SME Consultant Consortium. We have successfully received your application with the following details:</p>
           
           <div style="background-color: #f9f9f9; padding: 15px; margin: 20px 0; border-left: 4px solid #29688A;">
             <h3 style="color: #29688A; margin-top: 0;">Application Summary</h3>
-            <p><strong>Company:</strong> ${formData?.companyName || ""}</p>
-            <p><strong>Business Activity:</strong> ${formData?.businessActivity || ""}</p>
-            <p><strong>Business Sector:</strong> ${formData?.businessSector || ""}</p>
-            <p><strong>Business Interest:</strong> ${formData?.businessInterest || ""}</p>
+            <p><strong>Company:</strong> ${formData?.companyName || "N/A"}</p>
+            <p><strong>Experience:</strong> ${formData?.experience || ""}</p>
+            <p><strong>Specialization:</strong> ${formData?.specialization?.slice(0, 3).join(", ") || ""}${formData?.specialization?.length > 3 ? "..." : ""}</p>
           </div>
 
-          <p>Our team will review your Strategic Partnership application and get back to you within 2-3 business days. If you have any questions in the meantime, please don't hesitate to contact us at director@smechamber.com.</p>
+          <p>Our team will review your SME Consultant application and get back to you within 2-3 business days. If you have any questions in the meantime, please don't hesitate to contact us at director@smechamber.com.</p>
           
           <p>Best regards,<br>The SME Chamber of India Team</p>
         </div>
@@ -167,7 +158,7 @@ export async function POST(request) {
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: process.env.ADMIN_EMAIL,
-      subject: `New Strategic Partnership Application - ${formData?.companyName || ""}`,
+      subject: `New SME Consultant Application - ${formData?.consultantName || ""}`,
       html: adminEmailHtml,
     })
 
@@ -175,7 +166,7 @@ export async function POST(request) {
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: tokenData.email,
-      subject: "Strategic Partnership Application Confirmation",
+      subject: "SME Consultant Application Confirmation",
       html: userEmailHtml,
     })
 
@@ -184,7 +175,7 @@ export async function POST(request) {
 
     return NextResponse.json({ message: "Application submitted successfully" })
   } catch (error) {
-    console.error("Error processing Strategic Partnership application:", error)
+    console.error("Error processing SME Consultant application:", error)
     return NextResponse.json({ error: "Failed to process application" }, { status: 500 })
   }
 }
