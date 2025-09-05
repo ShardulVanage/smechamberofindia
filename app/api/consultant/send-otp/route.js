@@ -11,8 +11,8 @@ const rateLimitStorage = global.rateLimitStorage
 const ipRateLimitStorage = global.ipRateLimitStorage
 
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
-const MAX_ATTEMPTS = 3
-const IP_MAX_ATTEMPTS = 5
+const MAX_ATTEMPTS = 15
+const IP_MAX_ATTEMPTS = 15
 
 function normalizeEmail(email) {
   return String(email || "")

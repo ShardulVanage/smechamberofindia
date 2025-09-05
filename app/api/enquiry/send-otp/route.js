@@ -14,8 +14,8 @@ const rateLimitStorage = g.rateLimitStorage
 const ipRateLimitStorage = g.ipRateLimitStorage
 
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
-const MAX_ATTEMPTS = 3
-const IP_MAX_ATTEMPTS = 5 // per-IP cap regardless of email
+const MAX_ATTEMPTS = 15
+const IP_MAX_ATTEMPTS = 15 // per-IP cap regardless of email
 
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
