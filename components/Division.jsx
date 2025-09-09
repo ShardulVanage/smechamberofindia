@@ -30,7 +30,7 @@ export const Division = () => {
   const responsiveGap = useResponsiveGap();
 
   return (
-    <section className="bg-background py-8 sm:py-12 md:py-16 lg:py-20">
+    <section className="bg-background py-8 sm:py-2 md:py-4 lg:py-8">
       <div className="group relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center space-y-6 md:flex-row md:space-y-0">
           {/* Slider Section - Order 2 on mobile, Order 1 on desktop */}

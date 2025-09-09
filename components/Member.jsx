@@ -46,7 +46,7 @@ export default function Members() {
 
   return (
     <motion.section
-      className="py-16 md:py-20"
+      className="py-4 md:py-12"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}

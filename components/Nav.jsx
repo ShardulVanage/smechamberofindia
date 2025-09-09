@@ -243,29 +243,27 @@ export function Navbar({
 
       {/* Main navbar */}
       <div className="bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all duration-500 ">
-      {/* <div 
+        {/* <div 
     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
     style={{
       backgroundImage: "url('/parliamentbg.jpg')"
     }}
   /> */}
-  
-  {/* Black Overlay */}
-  <div className="absolute inset-0 bg-blue/50" />
 
+        {/* Black Overlay */}
+        <div className="absolute inset-0 bg-blue/50" />
 
-  
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div
             className={cn(
-              "flex justify-between items-center mb-4 overflow-hidden transition-all duration-500 ease-in-out",
+              "flex justify-center items-center mb-4 overflow-hidden transition-all duration-500 ease-in-out relative",
               isScrolled ? "max-h-0 opacity-0 -translate-y-8 mb-0" : "max-h-32 opacity-100 translate-y-0 mb-4",
             )}
           >
-            <div className="flex items-center">
+            <div className="flex justify-center items-center w-full">
               <Image
                 src={leftLogoSrc || "/placeholder.svg"}
-                alt="Left Logo"
+                alt="SME Logo"
                 width={100}
                 height={50}
                 className="h-16 md:h-20 lg:h-24 w-auto object-contain transition-all duration-500"
@@ -274,24 +272,24 @@ export function Navbar({
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-gray-100 transition-colors z-10"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? <X className="w-6 h-6 text-[#29688A]" /> : <Menu className="w-6 h-6 text-[#29688A]" />}
             </button>
 
-            <div className="hidden md:flex items-center">
+            <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2">
               <Image
                 src={rightLogoSrc || "/placeholder.svg"}
                 alt="Right Logo"
                 width={100}
                 height={50}
-                className="h-16 md:h-20 lg:h-24 w-auto object-contain transition-all duration-500 drop-shadow-2xl "
+                className="h-16 md:h-20 lg:h-24 w-auto object-contain transition-all duration-500 drop-shadow-2xl"
               />
             </div>
           </div>
 
-        <div className="hidden md:flex justify-center">
+          <div className="hidden md:flex justify-center">
             <div className="bg-[#29688A]/90 backdrop-blur-md rounded-full px-6 py-3 border border-[#29688A] shadow-lg transition-all duration-300">
               <NavigationMenu>
                 <NavigationMenuList className="flex items-center gap-1">

@@ -126,7 +126,7 @@ function Hero() {
 
   return (
     <motion.section 
-      className="relative min-h-screen bg-gradient-to-tr from-white via-white to-[#29688A] overflow-hidden"
+      className="relative min-h-full bg-gradient-to-tr from-white via-white to-[#29688A] overflow-hidden"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -142,7 +142,7 @@ function Hero() {
       </motion.div>
 
       {/* Main Content Container */}
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2">
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
           
           {/* Left Content */}

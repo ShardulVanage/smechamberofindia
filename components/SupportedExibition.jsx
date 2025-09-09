@@ -34,7 +34,7 @@ export default function SupportedExibition() {
 
   return (
     <motion.section
-      className="py-16 md:py-32"
+      className="py-2 md:py-4"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, amount: 0.15 }}

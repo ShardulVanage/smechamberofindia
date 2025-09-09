@@ -192,7 +192,7 @@ export default function ServicesSection() {
 
   return (
     <motion.section
-      className="min-h-full bg-white py-12 px-6"
+      className="min-h-full bg-white py-4 px-6"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}

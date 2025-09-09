@@ -261,7 +261,7 @@ export async function POST(request) {
       } else if (sendError.message && sendError.message.includes("timeout")) {
         return NextResponse.json(
           {
-            error: "Email sending timeout. Please try again.",
+            error: "  ",
           },
           { status: 500 },
         )
