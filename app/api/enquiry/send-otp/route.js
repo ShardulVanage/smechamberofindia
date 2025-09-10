@@ -1,8 +1,5 @@
-//send-otp
-
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
-import twilio from "twilio"
 
 const g = globalThis
 if (!g.otpStorage) g.otpStorage = new Map()
@@ -16,8 +13,6 @@ const ipRateLimitStorage = g.ipRateLimitStorage
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
 const MAX_ATTEMPTS = 15
 const IP_MAX_ATTEMPTS = 15 // per-IP cap regardless of email
-
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
 function normalizeEmail(email) {
   return String(email || "")
@@ -49,6 +44,63 @@ async function verifyRecaptcha(token) {
   } catch (err) {
     console.error("[enquiry/send-otp] reCAPTCHA error:", err)
     return false
+  }
+}
+
+async function sendSMSOTP(phone, otp) {
+  try {
+    let formattedPhone = phone
+
+    // Remove + prefix if present
+    if (formattedPhone.startsWith("+")) {
+      formattedPhone = formattedPhone.substring(1)
+    }
+
+    // Handle Indian country code (91)
+    if (formattedPhone.startsWith("91") && formattedPhone.length === 12) {
+      formattedPhone = formattedPhone.substring(2) // Remove 91 prefix for 12-digit numbers
+    }
+
+    // Validate that we have a proper 10-digit Indian mobile number
+    if (!/^[6-9]\d{9}$/.test(formattedPhone)) {
+      throw new Error(`Invalid Indian mobile number format: ${phone}`)
+    }
+
+    const message = `${otp} is the OTP for the registration process - SMECHM`
+
+    const params = new URLSearchParams({
+      apikey: process.env.SMS_API_KEY,
+      type: "TEXT",
+      sender: process.env.SMS_SENDER || "SMECHM",
+      entityId: process.env.SMS_ENTITY_ID,
+      mobile: formattedPhone, // Use formatted phone number instead of original
+      message: message,
+    })
+
+    const smsUrl = `${process.env.SMS_GATEWAY_URL}?${params.toString()}`
+
+    const response = await fetch(smsUrl, {
+      method: "GET",
+      headers: {
+        "User-Agent": "NextJS-SMS-Client/1.0",
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`SMS Gateway responded with status: ${response.status}`)
+    }
+
+    const responseText = await response.text()
+    console.log("[SMS Gateway Response]:", responseText)
+
+    if (responseText.includes("ERR_MOBILE")) {
+      throw new Error(`SMS Gateway rejected mobile number: ${formattedPhone}`)
+    }
+
+    return { success: true, response: responseText }
+  } catch (error) {
+    console.error("[SMS Gateway Error]:", error)
+    throw error
   }
 }
 
@@ -117,7 +169,7 @@ export async function POST(request) {
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
     })
 
-     const otpEmailHtml = `
+    const otpEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #29688A; color: white; padding: 20px; text-align: center;">
           <h1>Enquiry Verification - Email OTP</h1>
@@ -144,17 +196,13 @@ export async function POST(request) {
       html: otpEmailHtml,
     })
 
-    const smsPromise = twilioClient.messages.create({
-      body: `Your SMS verification code for stall booking enquiry is: ${smsOtp}. Valid for 3 minutes. Do not share this code.`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: phone,
-    })
+    const smsPromise = sendSMSOTP(phone, smsOtp)
 
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("OTP sending timeout")), 60000))
 
     try {
       await Promise.race([Promise.all([emailPromise, smsPromise]), timeoutPromise])
-      
+
       // Only store OTP data if both email and SMS were sent successfully
       otpStorage.set(normalizedEmail, {
         emailOtp,
@@ -165,13 +213,11 @@ export async function POST(request) {
         createdAt: now,
         expiresAt: now + 3 * 60 * 1000, // 3 minutes
       })
-      
     } catch (error) {
-      // Check if it's a Twilio error (phone number related)
-      if (error.code && (error.code === 21211 || error.code === 21614 || error.message?.includes('phone number'))) {
-        throw new Error("Invalid phone number. Please check and try again.")
+      if (error.message?.includes("SMS Gateway") || error.message?.includes("phone")) {
+        throw new Error("Invalid phone number or SMS service unavailable. Please check and try again.")
       }
-      
+
       // For other errors, throw a generic message
       throw new Error("Failed to send verification codes. Please try again.")
     }

@@ -87,7 +87,7 @@ export async function POST(request) {
             <tr><td style="padding:8px; font-weight:bold;">Name:</td><td style="padding:8px;">${data.firstName || ""} ${data.lastName || ""}</td></tr>
             <tr><td style="padding:8px; font-weight:bold;">Email:</td><td style="padding:8px;">${data.email || ""}</td></tr>
             <tr><td style="padding:8px; font-weight:bold;">Mobile:</td><td style="padding:8px;">${data.mobile || ""}</td></tr>
-            <tr><td style="padding:8px; font-weight:bold;">Phone:</td><td style="padding:8px;">${data.phone || ""}</td></tr>
+     
             <tr><td style="padding:8px; font-weight:bold;">Designation:</td><td style="padding:8px;">${data.designation || ""}</td></tr>
             <tr><td style="padding:8px; font-weight:bold;">Company:</td><td style="padding:8px;">${data.company || ""}</td></tr>
             <tr><td style="padding:8px; font-weight:bold;">Business Activity:</td><td style="padding:8px;">${data.businessActivity || ""}</td></tr>

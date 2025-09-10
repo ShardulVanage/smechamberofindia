@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
-import twilio from "twilio"
 
 if (!global.otpStorage) global.otpStorage = new Map()
 if (!global.rateLimitStorage) global.rateLimitStorage = new Map()
@@ -13,6 +12,39 @@ const ipRateLimitStorage = global.ipRateLimitStorage
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
 const MAX_ATTEMPTS = 15
 const IP_MAX_ATTEMPTS = 15
+
+async function sendSMSOTP(mobile, otp) {
+  const gatewayUrl = process.env.SMS_GATEWAY_URL
+  const apiKey = process.env.SMS_API_KEY
+  const sender = process.env.SMS_SENDER
+  const entityId = process.env.SMS_ENTITY_ID
+
+  const message = encodeURIComponent(`${otp} is the OTP for the registration process - ${sender}`)
+  const url = `${gatewayUrl}?apikey=${apiKey}&type=TEXT&sender=${sender}&entityId=${entityId}&mobile=${mobile}&message=${message}`
+
+  const response = await fetch(url, { method: "GET" })
+  if (!response.ok) {
+    throw new Error(`SMS Gateway error: ${response.status}`)
+  }
+
+  // Get the response text to check for SMS gateway errors
+  const result = await response.text()
+  console.log("[council/send-otp] SMS Gateway response:", result)
+
+  // Check for specific SMS gateway error responses
+  if (result.includes('ERR_MOBILE') || result.includes('ERROR') || result.includes('FAILED')) {
+    console.error("[council/send-otp] SMS Gateway error in response:", result)
+    throw new Error("Invalid phone number format. Please check your phone number and try again.")
+  }
+
+  // Check for other common error patterns
+  if (result.includes('ERR_') || result.toLowerCase().includes('error')) {
+    console.error("[council/send-otp] SMS Gateway error in response:", result)
+    throw new Error("Failed to send SMS. Please check your phone number and try again.")
+  }
+
+  return response
+}
 
 function normalizeEmail(email) {
   return String(email || "")
@@ -51,6 +83,7 @@ function isE164(phone) {
   return /^\+?[1-9]\d{7,14}$/.test(String(phone || ""))
 }
 
+// Function to validate email format
 function isValidEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
@@ -126,13 +159,13 @@ export async function POST(request) {
       if (!ok) return NextResponse.json({ error: "Invalid reCAPTCHA verification" }, { status: 400 })
     }
 
-    // Check Twilio configuration
-    const accountSid = process.env.TWILIO_ACCOUNT_SID
-    const authToken = process.env.TWILIO_AUTH_TOKEN
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER
-
-    if (!accountSid || !authToken || !fromNumber) {
-      console.error("Twilio env vars missing. Please set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER")
+    if (
+      !process.env.SMS_GATEWAY_URL ||
+      !process.env.SMS_API_KEY ||
+      !process.env.SMS_SENDER ||
+      !process.env.SMS_ENTITY_ID
+    ) {
+      console.error("SMS Gateway env vars missing. Please set SMS_GATEWAY_URL, SMS_API_KEY, SMS_SENDER, SMS_ENTITY_ID")
       return NextResponse.json({ error: "Server SMS configuration missing" }, { status: 500 })
     }
 
@@ -140,21 +173,6 @@ export async function POST(request) {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
       console.error("Gmail env vars missing. Please set GMAIL_USER, GMAIL_APP_PASSWORD")
       return NextResponse.json({ error: "Server email configuration missing" }, { status: 500 })
-    }
-
-    const client = twilio(accountSid, authToken)
-
-    // STEP 1: Validate phone number first (before generating OTPs)
-    try {
-      await client.lookups.v1.phoneNumbers(mobile).fetch()
-    } catch (lookupError) {
-      console.error("Phone number lookup error:", lookupError)
-      return NextResponse.json(
-        {
-          error: "Invalid phone number format or unsupported region",
-        },
-        { status: 400 },
-      )
     }
 
     // STEP 2: Test email configuration (create transporter and verify)
@@ -184,7 +202,7 @@ export async function POST(request) {
     const otpEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #29688A; color: white; padding: 20px; text-align: center;">
-          <h1>SME Consultant Application OTP</h1>
+          <h1>Strategic Partnership Application OTP</h1>
         </div>
         <div style="padding: 30px; text-align: center;">
           <h2 style="color: #29688A; margin-bottom: 20px;">Your Email Verification Code</h2>
@@ -207,15 +225,11 @@ export async function POST(request) {
       const emailPromise = transporter.sendMail({
         from: process.env.GMAIL_USER,
         to: normalizedEmail,
-        subject: "SME Consultant Application - Email OTP",
+        subject: "Strategic Partnership Application - Email OTP",
         html: otpEmailHtml,
       })
 
-      const smsPromise = client.messages.create({
-        body: `Your SME Consultant verification code is ${smsOtp}. It expires in 3 minutes.`,
-        from: fromNumber,
-        to: mobile,
-      })
+      const smsPromise = sendSMSOTP(mobile, smsOtp)
 
       // Wait for both to complete - if any fails, both fail
       await Promise.all([Promise.race([emailPromise, emailTimeoutPromise]), smsPromise])
@@ -235,26 +249,32 @@ export async function POST(request) {
     } catch (sendError) {
       console.error("Error sending OTPs:", sendError)
 
-      // Provide specific error messages based on error type
-      if (sendError.message && sendError.message.includes("unverified")) {
+      // Handle specific SMS gateway errors
+      if (sendError.message && sendError.message.includes("Invalid phone number format")) {
         return NextResponse.json(
           {
-            error:
-              "Phone number is unverified. For Twilio trial accounts, please verify your phone number at twilio.com/console/phone-numbers/verified or upgrade your account.",
+            error: "Invalid phone number format. Please check your phone number and try again.",
           },
           { status: 400 },
         )
-      } else if (sendError.message && sendError.message.includes("not a valid phone number")) {
+      } else if (sendError.message && sendError.message.includes("Failed to send SMS")) {
         return NextResponse.json(
           {
-            error: "Invalid phone number format",
+            error: "Failed to send SMS. Please check your phone number and try again.",
           },
           { status: 400 },
+        )
+      } else if (sendError.message && sendError.message.includes("SMS Gateway error")) {
+        return NextResponse.json(
+          {
+            error: "SMS service temporarily unavailable. Please try again.",
+          },
+          { status: 500 },
         )
       } else if (sendError.message && sendError.message.includes("timeout")) {
         return NextResponse.json(
           {
-            error: "Email sending timeout. Please try again.",
+            error: "Service timeout. Please try again.",
           },
           { status: 500 },
         )

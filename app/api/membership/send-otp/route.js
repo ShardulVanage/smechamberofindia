@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
-import twilio from "twilio"
 
 if (!global.otpStorage) global.otpStorage = new Map()
 if (!global.rateLimitStorage) global.rateLimitStorage = new Map()
@@ -164,21 +163,43 @@ export async function POST(request) {
       html: otpEmailHtml,
     })
 
-    // Send SMS OTP via Twilio
-    const accountSid = process.env.TWILIO_ACCOUNT_SID
-    const authToken = process.env.TWILIO_AUTH_TOKEN
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER
+    // Send SMS OTP via PHP Gateway
+    const smsGatewayUrl = process.env.SMS_GATEWAY_URL
+    const apiKey = process.env.SMS_API_KEY
+    const sender = process.env.SMS_SENDER
+    const entityId = process.env.SMS_ENTITY_ID
 
-    if (!accountSid || !authToken || !fromNumber) {
-      console.error("Twilio env vars missing. Please set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER")
+    if (!smsGatewayUrl || !apiKey || !sender || !entityId) {
+      console.error("SMS Gateway env vars missing. Please set SMS_GATEWAY_URL, SMS_API_KEY, SMS_SENDER, SMS_ENTITY_ID")
       return NextResponse.json({ error: "Server SMS configuration missing" }, { status: 500 })
     }
 
-    const client = twilio(accountSid, authToken)
-    const smsPromise = client.messages.create({
-      body: `Your membership verification code is ${smsOtp}. It expires in 3 minutes.`,
-      from: fromNumber,
-      to: mobile,
+    // Format mobile number for the gateway (remove + if present)
+    const formattedMobile = mobile.replace(/^\+/, "")
+
+    // Construct the SMS message
+    const smsMessage = `${smsOtp} is the OTP for the Membership registration process - SMECHM`
+
+    // Build the SMS gateway URL with parameters
+    const smsUrl = new URL(smsGatewayUrl)
+    smsUrl.searchParams.append("apikey", apiKey)
+    smsUrl.searchParams.append("type", "TEXT")
+    smsUrl.searchParams.append("sender", sender)
+    smsUrl.searchParams.append("entityId", entityId)
+    smsUrl.searchParams.append("mobile", formattedMobile)
+    smsUrl.searchParams.append("message", smsMessage)
+
+    const smsPromise = fetch(smsUrl.toString(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(async (response) => {
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`SMS Gateway error: ${response.status} - ${errorText}`)
+      }
+      return response.text()
     })
 
     // Timeout guard for email send (60s)

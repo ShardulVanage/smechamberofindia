@@ -422,7 +422,7 @@ export default function SMEConsultantPage() {
                         defaultCountry="IN"
                         value={formData.phone}
                         onChange={handlePhoneChange}
-                        className={`w-full ${
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#29688A]/10  ${
                           validationErrors.phone
                             ? "border-red-300 focus:border-red-500"
                             : "border-gray-200 focus:border-[#29688A]"

@@ -502,7 +502,7 @@ export default function MembershipForm({ membershipType }) {
                 onChange={(value) => handleInputChange("mobile", value || "")}
                 international
                 countryCallingCodeEditable={false}
-                        className="w-full px-4 py-1.5  shadow-2xs border  rounded-md text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-[#4d724d]/50"
+                className="w-full px-4 py-1.5  shadow-2xs border  rounded-md text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-[#4d724d]/50"
               />
             </div>
             <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +91, +1).</p>

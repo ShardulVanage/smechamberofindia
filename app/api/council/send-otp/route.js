@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
-import twilio from "twilio"
 
 const g = globalThis
 if (!g.otpStorage) g.otpStorage = new Map()
@@ -14,8 +13,6 @@ const ipRateLimitStorage = g.ipRateLimitStorage
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
 const MAX_ATTEMPTS = 15
 const IP_MAX_ATTEMPTS = 15 // per-IP cap regardless of email
-
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
 function normalizeEmail(email) {
   return String(email || "")
@@ -50,6 +47,67 @@ async function verifyRecaptcha(token) {
   }
 }
 
+async function sendSMSOTP(phoneNumber, otp) {
+  try {
+    const message = encodeURIComponent(`${otp} is the OTP for the registration process - SMECHM`)
+    const url = `${process.env.SMS_GATEWAY_URL}?apikey=${process.env.SMS_API_KEY}&type=TEXT&sender=${process.env.SMS_SENDER}&entityId=${process.env.SMS_ENTITY_ID}&mobile=${phoneNumber}&message=${message}`
+
+    const response = await fetch(url, {
+      method: "GET",
+      timeout: 30000,
+    })
+
+    if (!response.ok) {
+      throw new Error(`SMS Gateway responded with status: ${response.status}`)
+    }
+
+    const result = await response.text()
+    console.log("[council/send-otp] SMS Gateway response:", result)
+
+    // Check for specific SMS gateway error responses
+    if (result.includes('ERR_MOBILE') || result.includes('ERROR') || result.includes('FAILED')) {
+      console.error("[council/send-otp] SMS Gateway error in response:", result)
+      throw new Error("Invalid phone number format. Please check your phone number and try again.")
+    }
+
+    // Check for other common error patterns
+    if (result.includes('ERR_') || result.toLowerCase().includes('error')) {
+      console.error("[council/send-otp] SMS Gateway error in response:", result)
+      throw new Error("Failed to send SMS. Please check your phone number and try again.")
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("[council/send-otp] SMS Gateway error:", error)
+    
+    // Re-throw our custom error messages
+    if (error.message.includes("Invalid phone number format") || 
+        error.message.includes("Failed to send SMS. Please check")) {
+      throw error
+    }
+    
+    // For network/timeout errors
+    throw new Error("SMS service is currently unavailable. Please try again later.")
+  }
+}
+
+// Email validation function
+async function validateEmail(email) {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+    })
+    
+    // Verify SMTP connection
+    await transporter.verify()
+    return true
+  } catch (error) {
+    console.error("[council/send-otp] Email validation error:", error)
+    throw new Error("Email service is currently unavailable. Please try again later.")
+  }
+}
+
 export async function POST(request) {
   try {
     const { email, phone, mobile, recaptchaToken, isResend } = await request.json()
@@ -57,6 +115,17 @@ export async function POST(request) {
     const normalizedEmail = normalizeEmail(email)
     const clientIP = getClientIP(request)
     const now = Date.now()
+
+    // Basic email format validation
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 })
+    }
+
+    // Basic phone number validation
+    const phoneToUse = phone || mobile
+    if (!phoneToUse || phoneToUse.length < 10) {
+      return NextResponse.json({ error: "Please enter a valid phone number." }, { status: 400 })
+    }
 
     // Per-IP attempts + temporary ban
     const ipData = ipRateLimitStorage.get(clientIP)
@@ -107,6 +176,9 @@ export async function POST(request) {
       if (!ok) return NextResponse.json({ error: "Invalid reCAPTCHA verification" }, { status: 400 })
     }
 
+    // Validate email service availability first
+    await validateEmail(normalizedEmail)
+
     const emailOtp = generateOTP()
     const smsOtp = generateOTP()
 
@@ -135,6 +207,7 @@ export async function POST(request) {
       </div>
     `
 
+    // Send the actual OTPs
     const emailPromise = transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: normalizedEmail,
@@ -142,11 +215,7 @@ export async function POST(request) {
       html: otpEmailHtml,
     })
 
-    const smsPromise = twilioClient.messages.create({
-      body: `Your SMS verification code for council application is: ${smsOtp}. Valid for 3 minutes. Do not share this code.`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: phone || mobile,
-    })
+    const smsPromise = sendSMSOTP(phoneToUse, smsOtp)
 
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("OTP sending timeout")), 60000))
 
@@ -158,19 +227,26 @@ export async function POST(request) {
         emailOtp,
         smsOtp,
         email: normalizedEmail,
-        phone: phone || mobile || "",
+        phone: phoneToUse,
         clientIP,
         createdAt: now,
         expiresAt: now + 3 * 60 * 1000, // 3 minutes
       })
     } catch (error) {
-      // Check if it's a Twilio error (phone number related)
-      if (error.code && (error.code === 21211 || error.code === 21614 || error.message?.includes("phone number"))) {
-        throw new Error("Invalid phone number. Please check and try again.")
+      console.error("[council/send-otp] Error sending OTPs:", error)
+      
+      // Handle specific error types
+      if (error.message?.includes("Invalid phone number") || 
+          error.message?.includes("Failed to send SMS")) {
+        throw error
+      }
+      
+      if (error.message?.includes("timeout")) {
+        throw new Error("Request timed out. Please try again.")
       }
 
       // For other errors, throw a generic message
-      throw new Error("Failed to send verification codes. Please try again.")
+      throw new Error("Failed to send verification codes. Please check your email and phone number and try again.")
     }
 
     return NextResponse.json({
