@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Facebook, Instagram, Youtube, Twitter, Menu, X, ChevronDown } from "lucide-react"
+import { Facebook, Instagram, Youtube, Twitter, Menu, X, ChevronDown, Bell, MessageCircle, Linkedin } from "lucide-react"
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -64,7 +64,7 @@ export function Navbar({
       if (!ticking) {
         requestAnimationFrame(() => {
           const scrollTop = window.scrollY
-          if (scrollTop > 100 && !isScrolled) {
+          if (scrollTop >1 && !isScrolled) {
             setIsScrolled(true)
           } else if (scrollTop <= 5 && isScrolled) {
             setIsScrolled(false)
@@ -109,10 +109,10 @@ export function Navbar({
   }, [])
 
   const socialLinks = [
-    { icon: Youtube, href: "#", color: "hover:text-white hover:bg-[#29688A]" },
-    { icon: Twitter, href: "#", color: "hover:text-white hover:bg-[#29688A]" },
-    { icon: Facebook, href: "#", color: "hover:text-white hover:bg-[#29688A]" },
-    { icon: Instagram, href: "#", color: "hover:text-white hover:bg-[#29688A]" },
+    { icon: Facebook, href: "https://www.facebook.com/smechamber/", color: "hover:text-white hover:bg-[#29688A]" },
+    { icon: Linkedin, href: "https://www.linkedin.com/company/sme-chamber-of-india", color: "hover:text-white hover:bg-[#29688A]" },
+    { icon: Twitter, href: "https://twitter.com/smechamber", color: "hover:text-white hover:bg-[#29688A]" },
+    { icon: Youtube, href: "https://www.youtube.com/channel/UCviAxNg24ssgZTmkVQ6V6Bg", color: "hover:text-white hover:bg-[#29688A]" },
   ]
 
   const navItems = [
@@ -213,33 +213,76 @@ export function Navbar({
 
   return (
     <header className="w-full sticky top-0 z-50">
-      <div
-        className={cn(
-          "bg-[#29688A]  backdrop-blur-md border-b border-gray-200 overflow-hidden transition-all duration-500 ease-in-out",
-          "hidden md:block",
-          isScrolled ? "max-h-0 opacity-0 -translate-y-full" : "max-h-20 opacity-100 translate-y-0",
-        )}
-      >
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex justify-end items-center gap-3">
-            {socialLinks.map((social, index) => {
-              const Icon = social.icon
-              return (
-                <Link
-                  key={index}
-                  href={social.href}
-                  className={cn(
-                    "p-2 rounded-full bg-white border border-gray-200 transition-all duration-200 hover:scale-110 text-[#29688A] ",
-                    social.color,
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                </Link>
-              )
-            })}
-          </div>
-        </div>
+    <div
+  className={cn(
+    "bg-[#29688A] backdrop-blur-md border-b border-gray-200 overflow-hidden transition-all duration-500 ease-in-out",
+    "hidden md:block",
+    isScrolled ? "max-h-0 opacity-0 -translate-y-full" : "max-h-20 opacity-100 translate-y-0",
+  )}
+>
+  <div className="container mx-auto px-4 py-2">
+    <div className="flex justify-between items-center">
+      {/* Left side - Navigation Links */}
+      <div className="flex items-center gap-6">
+        <Link 
+          href="/" 
+          className="text-white hover:text-gray-200 transition-colors duration-200 text-xs font-medium"
+        >
+          Home
+        </Link>
+        <Link 
+          href="/contact" 
+          className="text-white hover:text-gray-200 transition-colors duration-200 text-xs font-medium"
+        >
+          Contact Us
+        </Link>
+        <Link 
+          href="/disclaimer" 
+          className="text-white hover:text-gray-200 transition-colors duration-200 text-xs font-medium"
+        >
+          Disclaimer
+        </Link>
       </div>
+
+      {/* Right side - Social Icons and Buttons */}
+      <div className="flex items-center gap-3">
+        {/* Social Media Icons */}
+        {socialLinks.map((social, index) => {
+          const Icon = social.icon
+          return (
+            <Link
+              key={index}
+              href={social.href}
+              className={cn(
+                "p-2 rounded-full bg-white border border-gray-200 transition-all duration-200 hover:scale-110 text-[#29688A]",
+                social.color,
+              )}
+            >
+              <Icon className="w-4 h-4" />
+            </Link>
+          )
+        })}
+        
+        {/* WhatsApp Group Button */}
+        <Link
+          href="https://wa.me/918291879068?text=Hi,%20Please%20Join%20me%20to%20SME%20Chamber%20Whatsapp%20Group."
+          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+        >
+          <MessageCircle className="w-3 h-3" />
+          Join WhatsApp
+        </Link>
+        
+        {/* Subscribe Button */}
+        <Link href="/subscribe">
+        <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium transition-colors duration-200 flex items-center gap-1">
+          <Bell className="w-3 h-3" />
+          Subscribe
+        </button>
+        </Link>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Main navbar */}
       <div className="bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all duration-500 ">
@@ -836,23 +879,66 @@ export function Navbar({
               </Link>
             ))}
 
-            <div className="flex justify-center gap-4 pt-4 border-t border-white/20 mt-4">
-              {socialLinks.map((social, index) => {
-                const Icon = social.icon
-                return (
-                  <Link
-                    key={index}
-                    href={social.href}
-                    className={cn(
-                      "p-2 rounded-full bg-white border border-white/20 transition-all duration-200 hover:scale-110 text-[#29688A] ",
-                      social.color,
-                    )}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </Link>
-                )
-              })}
-            </div>
+            <div className="flex flex-col gap-4 pt-4 border-t border-white/20 mt-4">
+  {/* Mobile Navigation Links */}
+  <div className="flex justify-center gap-6">
+    <Link 
+      href="/" 
+      className="text-white hover:text-gray-200 transition-colors duration-200 text-sm font-medium"
+    >
+      Home
+    </Link>
+    <Link 
+      href="/contact" 
+      className="text-white hover:text-gray-200 transition-colors duration-200 text-sm font-medium"
+    >
+      Contact Us
+    </Link>
+    <Link 
+      href="/disclaimer" 
+      className="text-white hover:text-gray-200 transition-colors duration-200 text-sm font-medium"
+    >
+      Disclaimer
+    </Link>
+  </div>
+
+  {/* Mobile Social Icons and Buttons */}
+  <div className="flex justify-center items-center gap-3">
+    {/* Social Media Icons */}
+    {socialLinks.map((social, index) => {
+      const Icon = social.icon
+      return (
+        <Link
+          key={index}
+          href={social.href}
+          className={cn(
+            "p-2 rounded-full bg-white border border-white/20 transition-all duration-200 hover:scale-110 text-[#29688A]",
+            social.color,
+          )}
+        >
+          <Icon className="w-4 h-4" />
+        </Link>
+      )
+    })}
+    
+    {/* WhatsApp Group Button */}
+    <Link
+      href="https://whatsapp.com/your-group-link"
+      className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+    >
+      <MessageCircle className="w-3 h-3" />
+      <span className="hidden sm:inline">Join WhatsApp</span>
+      <span className="sm:hidden">Join</span>
+    </Link>
+    
+    {/* Subscribe Button */}
+    <button className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-full text-xs font-medium transition-colors duration-200 flex items-center gap-1">
+      <Bell className="w-3 h-3" />
+      <span className="hidden sm:inline">Subscribe</span>
+      <span className="sm:hidden">Sub</span>
+    </button>
+  </div>
+</div>
           </div>
         </div>
       </div>

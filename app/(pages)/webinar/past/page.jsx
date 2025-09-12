@@ -30,7 +30,7 @@ export default function PastWebinarsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [categories, setCategories] = useState(["All"])
-  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(true)
+  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false) // Changed to false by default
 
   const isLoading = usePocketBaseFetchWithLoading(
     async (signal) => {
@@ -64,10 +64,7 @@ export default function PastWebinarsPage() {
         const uniqueCategories = ["All", ...new Set(allWebinars.map((w) => w.category).filter(Boolean))]
         setCategories(uniqueCategories)
 
-        // Auto-select first webinar if none selected
-        if (!selectedWebinar && result.items.length > 0) {
-          setSelectedWebinar(result.items[0])
-        }
+        // Removed auto-selection logic since we want player hidden by default
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Error fetching webinars:", error)
@@ -79,12 +76,20 @@ export default function PastWebinarsPage() {
 
   const handleWebinarSelect = (webinar) => {
     setSelectedWebinar(webinar)
-    setIsVideoPlayerVisible(true)
+    setIsVideoPlayerVisible(true) // Show player when webinar is selected
   }
 
   const handlePageChange = (page) => {
     setCurrentPage(page)
     setSelectedWebinar(null) // Reset selection when changing pages
+    setIsVideoPlayerVisible(false) // Hide player when changing pages
+  }
+
+  const handleSearchOrFilter = (callback) => {
+    callback()
+    setCurrentPage(1) // Reset to first page
+    setSelectedWebinar(null) // Reset selection
+    setIsVideoPlayerVisible(false) // Hide player
   }
 
   return (
@@ -105,19 +110,21 @@ export default function PastWebinarsPage() {
                 placeholder="Search webinars..."
                 value={searchTerm}
                 onChange={(e) => {
-                  setSearchTerm(e.target.value)
-                  setCurrentPage(1) // Reset to first page on search
+                  handleSearchOrFilter(() => setSearchTerm(e.target.value))
                 }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#29688A] focus:border-transparent"
               />
             </div>
-            <button
-              onClick={() => setIsVideoPlayerVisible(!isVideoPlayerVisible)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#29688A] text-white rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200"
-            >
-              {isVideoPlayerVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {isVideoPlayerVisible ? "Hide Player" : "Show Player"}
-            </button>
+            {/* Only show hide/show button when player is visible */}
+            {isVideoPlayerVisible && (
+              <button
+                onClick={() => setIsVideoPlayerVisible(false)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#29688A] text-white rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200"
+              >
+                <EyeOff className="w-4 h-4" />
+                Hide Player
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -125,8 +132,7 @@ export default function PastWebinarsPage() {
               <button
                 key={category}
                 onClick={() => {
-                  setSelectedCategory(category)
-                  setCurrentPage(1) // Reset to first page on filter change
+                  handleSearchOrFilter(() => setSelectedCategory(category))
                 }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
                   selectedCategory === category
@@ -140,72 +146,64 @@ export default function PastWebinarsPage() {
           </div>
         </div>
 
-        {isVideoPlayerVisible && (
+        {isVideoPlayerVisible && selectedWebinar && (
           <div id="video-player" className="mb-8">
-            {selectedWebinar ? (
-              <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg">
-                <div className="aspect-video">
-                  <iframe
-                    src={convertToEmbedUrl(selectedWebinar.youtubeUrl)}
-                    title={selectedWebinar.title}
-                    className="w-full h-full"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
+            <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg">
+              <div className="aspect-video">
+                <iframe
+                  src={convertToEmbedUrl(selectedWebinar.youtubeUrl)}
+                  title={selectedWebinar.title}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Recorded</span>
+                  <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                    {selectedWebinar.category}
+                  </span>
                 </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Recorded</span>
-                    <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
-                      {selectedWebinar.category}
-                    </span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-[#29688A] mb-3">{selectedWebinar.title}</h2>
-                  <p className="text-gray-600 mb-4">{selectedWebinar.description}</p>
+                <h2 className="text-2xl font-bold text-[#29688A] mb-3">{selectedWebinar.title}</h2>
+                <p className="text-gray-600 mb-4">{selectedWebinar.description}</p>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(selectedWebinar.date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>{selectedWebinar.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      <span>{selectedWebinar.attendees} attended</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Eye className="w-4 h-4" />
-                      <span>{selectedWebinar.views || 0} views</span>
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    <span>{new Date(selectedWebinar.date).toLocaleDateString()}</span>
                   </div>
-
-                  <div className="border-t pt-4 mb-4">
-                    <p className="text-sm text-gray-700 mb-1">
-                      <span className="font-medium">Speaker:</span> {selectedWebinar.speaker}
-                    </p>
-                    <p className="text-sm text-gray-600">{selectedWebinar.speakerTitle}</p>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{selectedWebinar.duration}</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span>{selectedWebinar.attendees} attended</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    <span>{selectedWebinar.views || 0} views</span>
+                  </div>
+                </div>
 
-                    <Link href={selectedWebinar.youtubeUrl} target="_blank" rel="noopener noreferrer" >
+                <div className="border-t pt-4 mb-4">
+                  <p className="text-sm text-gray-700 mb-1">
+                    <span className="font-medium">Speaker:</span> {selectedWebinar.speaker}
+                  </p>
+                  <p className="text-sm text-gray-600">{selectedWebinar.speakerTitle}</p>
+                </div>
+
+                <Link href={selectedWebinar.youtubeUrl} target="_blank" rel="noopener noreferrer">
                   <div className="flex gap-3">
                     <button className="flex-1 bg-[#29688A] text-white py-3 px-4 rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200 font-medium">
                       Watch Full Recording
                     </button>
                   </div>
-                    </Link>
-                </div>
+                </Link>
               </div>
-            ) : (
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
-                <Play className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">Select a Webinar</h3>
-                <p className="text-gray-500">Choose a webinar from the grid below to watch the recording</p>
-              </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -268,13 +266,15 @@ export default function PastWebinarsPage() {
                     </p>
                     <p className="text-xs text-gray-600 line-clamp-1">{webinar.speakerTitle}</p>
                   </div>
-                  <Link href={webinar.youtubeUrl} target="_blank" rel="noopener noreferrer" >
-                  <div className="flex gap-2">
-                    <button className="flex-1 bg-[#29688A] text-white py-2 px-3 rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200 text-sm font-medium">
-                      Watch
-                    </button>
-                  
-                  </div>
+                  <Link href={webinar.youtubeUrl} target="_blank" rel="noopener noreferrer">
+                    <div className="flex gap-2">
+                      <button 
+                        className="flex-1 bg-[#29688A] text-white py-2 px-3 rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200 text-sm font-medium"
+                        onClick={(e) => e.stopPropagation()} // Prevent card click when clicking watch button
+                      >
+                        Watch
+                      </button>
+                    </div>
                   </Link>
                 </div>
               ))}

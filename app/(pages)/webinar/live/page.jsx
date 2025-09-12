@@ -29,7 +29,7 @@ export default function LiveWebinarsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [categories, setCategories] = useState(["All"])
-  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(true)
+  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false) // Changed to false by default
 
   const isLoading = usePocketBaseFetchWithLoading(
     async (signal) => {
@@ -49,7 +49,7 @@ export default function LiveWebinarsPage() {
 
         const result = await pb.collection("Webinars").getList(currentPage, WEBINARS_PER_PAGE, {
           filter: filter,
-          sort: "-date",
+          sort: "order", // This ensures sorting by the order field
           signal,
         })
 
@@ -58,15 +58,13 @@ export default function LiveWebinarsPage() {
 
         const allWebinars = await pb.collection("Webinars").getFullList({
           filter: `date >= "${today}"`,
+          sort: "order", // This ensures sorting by the order field
           signal,
         })
         const uniqueCategories = ["All", ...new Set(allWebinars.map((w) => w.category).filter(Boolean))]
         setCategories(uniqueCategories)
 
-        // Auto-select first webinar if none selected
-        if (!selectedWebinar && result.items.length > 0) {
-          setSelectedWebinar(result.items[0])
-        }
+        // Removed auto-selection of first webinar
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Error fetching webinars:", error)
@@ -78,12 +76,34 @@ export default function LiveWebinarsPage() {
 
   const handleWebinarSelect = (webinar) => {
     setSelectedWebinar(webinar)
-    setIsVideoPlayerVisible(true)
+    setIsVideoPlayerVisible(true) // Show player when a webinar is selected
+    
+    // Scroll to video player smoothly
+    setTimeout(() => {
+      const videoPlayer = document.getElementById('video-player')
+      if (videoPlayer) {
+        videoPlayer.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
   }
 
   const handlePageChange = (page) => {
     setCurrentPage(page)
     setSelectedWebinar(null) // Reset selection when changing pages
+    setIsVideoPlayerVisible(false) // Hide player when changing pages
+  }
+
+  const handleTogglePlayer = () => {
+    setIsVideoPlayerVisible(!isVideoPlayerVisible)
+    if (!isVideoPlayerVisible && selectedWebinar) {
+      // If showing player and there's a selected webinar, scroll to it
+      setTimeout(() => {
+        const videoPlayer = document.getElementById('video-player')
+        if (videoPlayer) {
+          videoPlayer.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
   }
 
   return (
@@ -110,13 +130,15 @@ export default function LiveWebinarsPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#29688A] focus:border-transparent"
               />
             </div>
-            <button
-              onClick={() => setIsVideoPlayerVisible(!isVideoPlayerVisible)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#29688A] text-white rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200"
-            >
-              {isVideoPlayerVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {isVideoPlayerVisible ? "Hide Player" : "Show Player"}
-            </button>
+            {selectedWebinar && (
+              <button
+                onClick={handleTogglePlayer}
+                className="flex items-center gap-2 px-4 py-2 bg-[#29688A] text-white rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200"
+              >
+                {isVideoPlayerVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {isVideoPlayerVisible ? "Hide Player" : "Show Player"}
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -139,74 +161,70 @@ export default function LiveWebinarsPage() {
           </div>
         </div>
 
-        {isVideoPlayerVisible && (
+        {isVideoPlayerVisible && selectedWebinar && (
           <div id="video-player" className="mb-8">
-            {selectedWebinar ? (
-              <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg">
-                <div className="aspect-video">
-                  <iframe
-                    src={convertToEmbedUrl(selectedWebinar.youtubeUrl)}
-                    title={selectedWebinar.title}
-                    className="w-full h-full"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    {selectedWebinar.isLive && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                        LIVE
-                      </span>
-                    )}
-                    <span className="bg-[#29688A] text-white text-xs px-2 py-1 rounded-full">
-                      {selectedWebinar.category}
+            <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg">
+              <div className="aspect-video">
+                <iframe
+                  src={convertToEmbedUrl(selectedWebinar.youtubeUrl)}
+                  title={selectedWebinar.title}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  {selectedWebinar.isLive && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      LIVE
                     </span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-[#29688A] mb-3">{selectedWebinar.title}</h2>
-                  <p className="text-gray-600 mb-4">{selectedWebinar.description}</p>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(selectedWebinar.date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>{selectedWebinar.time}</span>
-                    </div>
-                    {/* <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      <span>{selectedWebinar.attendees} registered</span>
-                    </div> */}
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>{selectedWebinar.duration}</span>
-                    </div>
-                  </div>
-
-                  <div className="border-t pt-4 mb-4">
-                    <p className="text-sm text-gray-700 mb-1">
-                      <span className="font-medium">Speaker:</span> {selectedWebinar.speaker}
-                    </p>
-                    <p className="text-sm text-gray-600">{selectedWebinar.speakerTitle}</p>
-                  </div>
-                    <Link href={selectedWebinar.isLive ? selectedWebinar.youtubeUrl : selectedWebinar.registrationLink} target="_blank" rel="noopener noreferrer">
-                    <button className="w-full bg-[#29688A] text-white py-3 px-4 rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200 font-medium">
-                      {selectedWebinar.isLive ? "Join Live Webinar" : "Register for Webinar"}
-                    </button>
-                  </Link>
+                  )}
+                  <span className="bg-[#29688A] text-white text-xs px-2 py-1 rounded-full">
+                    {selectedWebinar.category}
+                  </span>
                 </div>
+                <h2 className="text-2xl font-bold text-[#29688A] mb-3">{selectedWebinar.title}</h2>
+                <p className="text-gray-600 mb-4">{selectedWebinar.description}</p>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    <span>{new Date(selectedWebinar.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{selectedWebinar.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{selectedWebinar.duration}</span>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 mb-4">
+                  <p className="text-sm text-gray-700 mb-1">
+                    <span className="font-medium">Speaker:</span> {selectedWebinar.speaker}
+                  </p>
+                  <p className="text-sm text-gray-600">{selectedWebinar.speakerTitle}</p>
+                </div>
+                <Link href={selectedWebinar.isLive ? selectedWebinar.youtubeUrl : selectedWebinar.registrationLink} target="_blank" rel="noopener noreferrer">
+                  <button className="w-full bg-[#29688A] text-white py-3 px-4 rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200 font-medium">
+                    {selectedWebinar.isLive ? "Join Live Webinar" : "Register for Webinar"}
+                  </button>
+                </Link>
               </div>
-            ) : (
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
-                <Play className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">Select a Webinar</h3>
-                <p className="text-gray-500">Choose a webinar from the grid below to view details and watch</p>
-              </div>
-            )}
+            </div>
+          </div>
+        )}
+
+        {!isVideoPlayerVisible && !selectedWebinar && (
+          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center mb-8">
+            <Play className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">Select a Webinar to Watch</h3>
+            <p className="text-gray-500">Click on any webinar card below to view details and watch the video</p>
           </div>
         )}
 
@@ -223,7 +241,7 @@ export default function LiveWebinarsPage() {
               {webinars.map((webinar) => (
                 <div
                   key={webinar.id}
-                  className={`bg-white border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                  className={`bg-white border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg transform hover:scale-105 ${
                     selectedWebinar?.id === webinar.id
                       ? "border-[#29688A] shadow-lg ring-2 ring-[#29688A] ring-opacity-20"
                       : "border-gray-200 hover:border-[#29688A]"
@@ -258,10 +276,6 @@ export default function LiveWebinarsPage() {
                       <Clock className="w-3 h-3" />
                       <span>{webinar.time}</span>
                     </div>
-                    {/* <div className="flex items-center gap-2">
-                      <Users className="w-3 h-3" />
-                      <span>{webinar.attendees} registered</span>
-                    </div> */}
                   </div>
 
                   <div className="border-t pt-3 mb-3">
@@ -270,10 +284,13 @@ export default function LiveWebinarsPage() {
                     </p>
                     <p className="text-xs text-gray-600 line-clamp-1">{webinar.speakerTitle}</p>
                   </div>
-                   <Link href={webinar.isLive ? webinar.youtubeUrl : webinar.registrationLink} target="_blank" rel="noopener noreferrer">       
-                  <button className="w-full bg-[#29688A] text-white py-2 px-3 rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200 text-sm font-medium">
-                    {webinar.isLive ? "Join Live" : "Register"}
-                  </button>
+                  <Link href={webinar.isLive ? webinar.youtubeUrl : webinar.registrationLink} target="_blank" rel="noopener noreferrer">       
+                    <button 
+                      className="w-full bg-[#29688A] text-white py-2 px-3 rounded-lg hover:bg-[#1e5a7a] transition-colors duration-200 text-sm font-medium"
+                      onClick={(e) => e.stopPropagation()} // Prevent card click when clicking the button
+                    >
+                      {webinar.isLive ? "Join Live" : "Register"}
+                    </button>
                   </Link>
                 </div>
               ))}

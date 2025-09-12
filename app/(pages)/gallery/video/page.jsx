@@ -55,7 +55,7 @@ export default function VideoGallery() {
       const pb = getClientPb()
       
       const response = await pb.collection("Gallery_video").getList(currentPage, itemsPerPage, {
-        sort: "-created",
+        sort: "order",
         signal: signal // Pass the abort signal to the request
       })
       
@@ -151,42 +151,46 @@ export default function VideoGallery() {
 
                 return (
                   <div
-                    key={video.id}
-                    className="group cursor-pointer bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-                    onClick={() => openDialog(video)}
+                  key={video.id}
+                  className="group cursor-pointer bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                  onClick={() => openDialog(video)}
                   >
-                    <div className="relative overflow-hidden">
-                      <img
-                        src={thumbnailUrl || "/placeholder.svg"}
-                        alt={video.title}
-                        className="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
-                        onError={(e) => {
-                          e.currentTarget.src = "/video-thumbnail.png"
-                        }}
-                      />
+                  <div className="relative overflow-hidden">
+                    <img
+                    src={
+                      video.img
+                      ? `${process.env.NEXT_PUBLIC_POCKETBASE_URL}/api/files/Gallery_video/${video.id}/${video.img}`
+                      : thumbnailUrl
+                    }
+                    alt={video.title}
+                    className="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      e.currentTarget.src = "/video-thumbnail.png"
+                    }}
+                    />
 
-                      {/* Play Button Overlay */}
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="bg-white/90 rounded-full p-4 group-hover:scale-110 transition-transform duration-300">
-                          <svg className="w-8 h-8 text-[#29688A]" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        </div>
-                      </div>
+                    {/* Play Button Overlay */}
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="bg-white/90 rounded-full p-4 group-hover:scale-110 transition-transform duration-300">
+                      <svg className="w-8 h-8 text-[#29688A]" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                      </svg>
                     </div>
+                    </div>
+                  </div>
 
-                    <div className="p-6">
-                      <h3 className="font-bold text-xl text-[#29688A] mb-3 group-hover:text-[#1e4a5f] transition-colors duration-300">
-                        {video.title}
-                      </h3>
-                      <p className="text-gray-600 leading-relaxed line-clamp-3">{video.description}</p>
-                      <div className="mt-4 flex items-center text-[#29688A] font-medium group-hover:text-[#1e4a5f] transition-colors duration-300">
-                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                        <span>Watch Video</span>
-                      </div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-xl text-[#29688A] mb-3 group-hover:text-[#1e4a5f] transition-colors duration-300">
+                    {video.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed line-clamp-3">{video.description}</p>
+                    <div className="mt-4 flex items-center text-[#29688A] font-medium group-hover:text-[#1e4a5f] transition-colors duration-300">
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <span>Watch Video</span>
                     </div>
+                  </div>
                   </div>
                 )
               })}

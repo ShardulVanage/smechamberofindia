@@ -1,0 +1,94 @@
+{
+  "headOffice": {
+    "title": "Registered & Head Office",
+    "address": "Samruddhi Venture Park, Office No. 1, 3rd Floor, Krantiveer Lakhuji Salve Marg, adjoining Hotel Tunga Paradise, next to Akruti Centre, Andheri East, Mumbai, Maharashtra 400093",
+    "emails": [
+      "secretariat@smechamber.com",
+      "director@smechamber.com",
+      "smechamberofindia@gmail.com",
+      "registration@smechamber.in"
+    ],
+    "phones": ["7506046755", "9930912755"],
+    "landlines": ["+91-22-6951 1111", "+91-22-2832 7219", "+91-22-2832 7220"],
+    "fax": "+91-22-2825 0414",
+    "workingDays": "Monday to Saturday",
+    "workingHours": "10.30 a.m. to 7.00 p.m"
+  },
+  "regionalOffices": [
+    {
+      "region": "Northern Regional Office",
+      "address": "Goldrush Capital Services Private Limited, 8H, Hansalaya building, Barakhamba Road, Connaught Place, New Delhi - 110001",
+      "mobile": "+91-7506046755",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Gujarat Regional Office",
+      "address": "1101, 11th Floor, Sun Avenue One, Manekbaug - Shyamal Cross Road, Shyamal, Ahmedabad – 380015",
+      "mobile": "+91-98201 79494",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Pune Regional Office",
+      "address": "B-03, Soba Towers, Near Poona Hospital, Sadashiv Peth, Pune - 411030",
+      "mobile": "+91-75060 46755",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Madhya Pradesh Regional Office (Bhopal & Indore)",
+      "address": "C/o Urbanitesllc LLP, Eh-27,Opp Apollo Hospital, Vijay Nagar, Indore-452010, Madhya Pradesh",
+      "mobile": "+91-93245 90116",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "East India Regional Office (Kolkata)",
+      "mobile": "+91-82918 79069",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Karnataka Regional Office",
+      "mobile": "+91-82918 79070",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Tamil Nadu Regional Office",
+      "address": "C/o Sumeet Facilities Ltd, 34 / 46, MGR Raod, Kalashetra Colony, Besant Nagar, Chennai - 600 090",
+      "mobile": "+91-99309 12755",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Kerala Regional Office",
+      "mobile": "+91-99309 12755",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Andhra Pradesh and Telangana Regional Office",
+      "mobile": "+91-82918 79070",
+      "email": "secretariat@smechamber.com"
+    }
+  ],
+  "overseasOffices": [
+    {
+      "region": "Middle East & Regional Office",
+      "company": "BUY DO BUY ADVERTISING LLC",
+      "address": "P O. Box 55356, Dubai, U.A.E.",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Bahrain Regional Office",
+      "company": "Al Mahara Trading & Contracting",
+      "address": "7th Floor, Al Matrook Building, Diplomatic Area, Manama, Kingdom of Bahrain. P.O Box No : 11893",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Malaysia Regional Office",
+      "company": "Tandoor Food industries Sdn Bhd",
+      "address": "39, Jalan SS26/15, Taman Mayang Jaya Light lnd. Park, 47301 Petaling Jaya, Selangor, Malaysia",
+      "email": "secretariat@smechamber.com"
+    },
+    {
+      "region": "Europe Regional Office",
+      "address": "17 Casel, Brightwen Grove, Stanmore, Middlesex, H A 7 4ZB United Kingdom (UK)",
+      "email": "secretariat@smechamber.com"
+    }
+  ]
+}

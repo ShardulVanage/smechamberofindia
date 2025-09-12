@@ -33,11 +33,11 @@ export default function EventCard({ event, index }) {
       className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
     >
       {/* Banner Image */}
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative h-70 overflow-hidden">
         <motion.img
           src={getBannerImageUrl()}
           alt={event.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
           whileHover={{ scale: 1.05 }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />

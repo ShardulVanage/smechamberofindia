@@ -15,7 +15,7 @@ export default function NewsPage() {
   const fetchNews = async (signal) => {
     try {
       const records = await pb.collection("news").getList(1, 20, {
-        sort: "-created",
+        sort: "order",
         signal,
       })
       setNews(records.items)

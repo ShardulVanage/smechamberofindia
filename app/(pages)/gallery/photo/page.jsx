@@ -18,7 +18,7 @@ export default function PhotoGallery() {
       try {
         const pb = getClientPb()
         const result = await pb.collection("Gallery_photo").getList(currentPage, perPage, {
-          sort: "created",
+          sort: "order",
             
           signal,
         })

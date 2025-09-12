@@ -16,7 +16,7 @@ export default function ForthcomingEventsPage() {
       try {
         const pb = getClientPb()
         const response = await pb.collection("forthcoming_events").getList(1, 50, {
-          sort: "eventDate",
+          sort: "order",
           requestKey: null, // Disable auto-cancellation for this specific request
         })
 
